@@ -7,6 +7,10 @@
         android:id="@+id/businessImg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
     <TextView
         android:id="@+id/businessName"
         android:layout_width="wrap_content"
@@ -15,4 +19,14 @@
         android:layout_marginLeft="10dp"
         android:hint="Business Name"
         android:textSize="18sp"/>
+
+    <RatingBar
+        android:id="@+id/businessRatingBar"
+        style = "?android:attr/ratingBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:layout_marginLeft="20dp"
+        android:layout_gravity="center_vertical|start"/>
+    </LinearLayout>
 </LinearLayout>

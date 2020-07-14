@@ -35,6 +35,7 @@ public class YelpRepo {
                     data.setBusinessName(b.getName());
                     data.setImageUrl(b.getImageUrl());
                     data.setYelpUrl(b.getUrl());
+                    data.setRating(b.getRating());
                     results.add(data);
                 }
                 data.clear();

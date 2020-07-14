@@ -41,4 +41,14 @@ public class YelpData {
     public String getYelpUrl() {
         return yelpUrl;
     }
+
+    private double rating;
+
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
 }

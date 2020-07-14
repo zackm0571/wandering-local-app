@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -67,6 +68,8 @@ public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> 
             holder.imgView.setLayoutParams(params);
             Picasso.get().load(Uri.decode(yelpData.getImageUrl())).into(holder.imgView);
 
+            holder.ratingBar.setNumStars(5);
+            holder.ratingBar.setRating((float)yelpData.getRating());
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -84,12 +87,14 @@ public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> 
     }
 
     class YelpBusiness extends RecyclerView.ViewHolder{
+        RatingBar ratingBar;
         ImageView imgView;
         TextView textView;
         public YelpBusiness(@NonNull View itemView) {
             super(itemView);
             this.imgView = itemView.findViewById(R.id.businessImg);
             this.textView = itemView.findViewById(R.id.businessName);
+            this.ratingBar = itemView.findViewById(R.id.businessRatingBar);
         }
     }
 }
