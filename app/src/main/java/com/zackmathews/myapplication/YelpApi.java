@@ -1,0 +1,63 @@
+package com.zackmathews.myapplication;
+
+import com.yelp.fusion.client.connection.YelpFusionApi;
+import com.yelp.fusion.client.connection.YelpFusionApiFactory;
+import com.yelp.fusion.client.models.SearchResponse;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+public class YelpApi {
+    private static final String API_KEY;
+    private YelpFusionApi api;
+
+    public YelpApi() {
+        try {
+            YelpFusionApiFactory apiFactory = new YelpFusionApiFactory();
+            api = apiFactory.createAPI(API_KEY);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void search(Callback<SearchResponse> callback, SearchBuilder builder) {
+        Call<SearchResponse> call = api.getBusinessSearch(builder.build());
+        call.enqueue(callback);
+    }
+
+    public static class SearchBuilder {
+        public static final String PARAM_TERM = "term";
+        public static final String PARAM_LOCATION = "location";
+        public static final String PARAM_LIMIT = "limit";
+        public static final String PARAM_OFFSET = "offset";
+        Map<String, String> map = new HashMap<>();
+
+        public SearchBuilder setTerm(String term) {
+            map.put(PARAM_TERM, term);
+            return this;
+        }
+
+        public SearchBuilder setLocation(String location) {
+            map.put(PARAM_LOCATION, location);
+            return this;
+        }
+
+        public SearchBuilder setLimit(int limit) {
+            map.put(PARAM_LIMIT, String.valueOf(limit));
+            return this;
+        }
+
+        public SearchBuilder setOffset(int offset) {
+            map.put(PARAM_OFFSET, String.valueOf(offset));
+            return this;
+        }
+
+        public Map<String, String> build() {
+            return map;
+        }
+    }
+}
