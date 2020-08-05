@@ -11,7 +11,6 @@ public class MainViewModel extends ViewModel {
     private MutableLiveData<List<YelpData>> yelpData = repo.search();
 
     public LiveData<List<YelpData>> getYelpData() {
-        if (yelpData == null) yelpData = new MutableLiveData<>();
         return yelpData;
     }
 
@@ -20,6 +19,6 @@ public class MainViewModel extends ViewModel {
     }
 
     public void getNextPage() {
-        yelpData = repo.searchWithOffset(yelpData.getValue().size());
+        yelpData = repo.searchWithOffset((yelpData.getValue() != null) ? yelpData.getValue().size() : 0);
     }
 }
