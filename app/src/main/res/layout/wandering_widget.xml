@@ -3,11 +3,12 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:background="@android:color/white"
+    android:background="@drawable/rounded_border"
     android:padding="@dimen/widget_margin">
 
     <ListView
         android:id="@+id/widgetList"
+        android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:listitem="@layout/yelp_business_row"/>
