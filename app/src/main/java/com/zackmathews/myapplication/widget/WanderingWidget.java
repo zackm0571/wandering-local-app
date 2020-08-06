@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.widget.RemoteViews;
 
 import com.zackmathews.myapplication.R;
@@ -54,6 +55,12 @@ public class WanderingWidget extends AppWidgetProvider {
     @Override
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        sendRefreshBroadcast(context);
     }
 
     @Override

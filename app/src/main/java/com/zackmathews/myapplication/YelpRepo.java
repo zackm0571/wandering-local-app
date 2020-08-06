@@ -87,11 +87,6 @@ public class YelpRepo {
     }
 
     private void persist(List<YelpData> data) {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                ServiceLocator.getDb().dao().addEntries(data);
-            }
-        });
+        AsyncTask.execute(() -> ServiceLocator.getDb().dao().addEntries(data));
     }
 }

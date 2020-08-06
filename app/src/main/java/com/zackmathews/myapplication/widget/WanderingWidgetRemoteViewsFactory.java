@@ -3,6 +3,7 @@ package com.zackmathews.myapplication.widget;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +12,7 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.squareup.picasso.Picasso;
+import com.zackmathews.myapplication.IOUtils;
 import com.zackmathews.myapplication.MvvmDatabase;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
@@ -18,15 +20,23 @@ import com.zackmathews.myapplication.YelpData;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     private Context context;
-    private Handler handler = new Handler(Looper.getMainLooper());
     private List<YelpData> data = new ArrayList<>();
     private MvvmDatabase db;
+    private OkHttpClient client = new OkHttpClient();
 
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
         this.context = applicationContext;
@@ -42,21 +52,17 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     }
 
     private void loadCached() {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<YelpData> cached = db.dao().getAll();
-                if (cached != null) {
-                    data.clear();
-                    data.addAll(cached);
-                }
+        AsyncTask.execute(() -> {
+            List<YelpData> cached = db.dao().getAll();
+            if (cached != null) {
+                data = cached;
+                Collections.sort(data, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
             }
         });
     }
 
     @Override
     public void onDataSetChanged() {
-        WanderingWidget.sendRefreshBroadcast(context);
     }
 
     @Override
@@ -71,22 +77,37 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     @Override
     public RemoteViews getViewAt(int i) {
-        if (i == AdapterView.INVALID_POSITION) return null;
+        if (i == AdapterView.INVALID_POSITION || data == null || data.size() == 0) return null;
 
         YelpData yd = data.get(i);
-        RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.yelp_business_row_widget);
+        final RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.yelp_business_row_widget);
         rv.setTextViewText(R.id.businessName, yd.getBusinessName());
         rv.setTextViewText(R.id.businessRatingText, String.format(Locale.getDefault(),
-                                                         "%.2f stars", yd.getRating()));
-//        try {
-//            Bitmap b = Picasso.get().load(yd.getImageUrl()).
-//            rv.setImageViewBitmap(R.id.businessImg, b);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+                "%.2f stars", yd.getRating()));
 
-        handler.post(() -> Picasso.get().load(yd.getImageUrl()).into(rv, R.id.businessImg, new int[]{i}));
+        if(yd.getBmp() != null){
+            rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+        }
+        else {
+            Request request = new Request.Builder()
+                    .url(yd.getImageUrl())
+                    .build();
 
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
+                    Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
+                    yd.setBmp(bmp);
+                    rv.setImageViewBitmap(R.id.businessImg, bmp);
+                }
+            });
+        }
         return rv;
     }
 

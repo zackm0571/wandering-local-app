@@ -15,6 +15,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.PrimaryKey;
 import androidx.room.Query;
+import androidx.room.Update;
 
 @Entity(tableName = "yelpData")
 public class YelpData {
@@ -37,6 +38,9 @@ public class YelpData {
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         void addEntries(List<YelpData> data);
+
+        @Update
+        void updateEntries(List<YelpData> data);
 
         @Query("DELETE FROM yelpdata")
         void deleteEntries();
