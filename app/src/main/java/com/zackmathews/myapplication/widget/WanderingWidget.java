@@ -54,6 +54,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
             Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
             views.setRemoteAdapter(R.id.widgetList, intent);
             appWidgetManager.updateAppWidget(appWidgetId, views);
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
         }
         if(ServiceLocator.getDb() == null){
             ServiceLocator.buildDb(context);
@@ -100,6 +101,13 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         this.context = context;
         final String action = intent.getAction();
         if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
+            if(ServiceLocator.getDb() == null){
+                ServiceLocator.buildDb(context);
+            }
+            if(repo == null){
+                repo = new YelpRepo(context);
+            }
+            repo.setListener(this);
             AppWidgetManager manager = AppWidgetManager.getInstance(context);
             ComponentName componentName = new ComponentName(context, WanderingWidget.class);
             manager.notifyAppWidgetViewDataChanged(manager.getAppWidgetIds(componentName), R.id.widgetList);

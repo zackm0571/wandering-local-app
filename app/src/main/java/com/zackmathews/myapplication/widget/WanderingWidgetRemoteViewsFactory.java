@@ -48,7 +48,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     public void onCreate() {
         Log.d(getClass().getSimpleName(), "onCreate");
         if (ServiceLocator.getDb() == null) {
-            throw new IllegalStateException();
+            db = ServiceLocator.buildDb(context);
         }
         db = ServiceLocator.getDb();
         handler = new Handler(Looper.getMainLooper());
@@ -79,6 +79,13 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public int getCount() {
         Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", data.size()));
+        while (data == null || data.size() == 0) {
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         return (data != null) ? data.size() : 0;
     }
 
@@ -98,7 +105,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     private void loadImage(YelpData yd, final RemoteViews rv) {
         if (yd.getBmp() != null) {
-            rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+            handler.post(() -> rv.setImageViewBitmap(R.id.businessImg, yd.getBmp()));
             return;
         }
         Request request = new Request.Builder()
