@@ -11,6 +11,6 @@
         android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/yelp_business_row"/>
+        tools:listitem="@layout/yelp_business_row_widget"/>
 
 </LinearLayout>

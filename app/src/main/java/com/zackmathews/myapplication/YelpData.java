@@ -5,8 +5,6 @@ import android.graphics.Bitmap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.room.ColumnInfo;
 import androidx.room.Dao;
 import androidx.room.Entity;
@@ -21,16 +19,7 @@ import androidx.room.Update;
 public class YelpData {
     public YelpData() {
     }
-/*
-    @Dao
-    public interface CacheDAO {
-        @Insert(onConflict = OnConflictStrategy.REPLACE)
-        void updateNetworkTimestamp(Long timestamp);
-        @Query()
-        Long getNetworkTimestamp();
-    }
 
- */
     @Dao
     public interface YelpDAO {
         @Query("SELECT * FROM yelpdata LIMIT 10")

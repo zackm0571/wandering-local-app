@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class MainViewModel extends ViewModel {
-    private YelpRepo repo = ServiceLocator.getYelpRepo();
+    private YelpRepo repo = new YelpRepo();
     private MutableLiveData<List<YelpData>> yelpData = repo.search();
 
     public LiveData<List<YelpData>> getYelpData() {
