@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import com.squareup.picasso.Picasso;
 import com.zackmathews.myapplication.IOUtils;
 import com.zackmathews.myapplication.MvvmDatabase;
 import com.zackmathews.myapplication.R;
@@ -38,6 +39,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     private MvvmDatabase db;
     private OkHttpClient client = new OkHttpClient();
     private Handler handler = new Handler();
+    private boolean isLoading = false;
 
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
         this.context = applicationContext;
@@ -57,11 +59,15 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     private void loadCached() {
         Log.d(getClass().getSimpleName(), "loadCached");
+        isLoading = true;
         AsyncTask.execute(() -> {
             List<YelpData> cached = db.dao().getAll();
             if (cached != null && cached.size() > 0) {
                 data = cached;
                 Collections.sort(data, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+                for(YelpData yd : data){
+                    loadImage(yd);
+                }
             }
         });
     }
@@ -79,14 +85,23 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public int getCount() {
         Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", data.size()));
-        while (data == null || data.size() == 0) {
+        while ((data == null || data.size() == 0) && isLoading) {
             try {
                 Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if(data != null && data.size() > 0) {
+                int count = 0;
+                for (YelpData yd : data) {
+                    if(yd.getBmp() != null){
+                        count++;
+                    }
+                }
+                if(count == data.size()) isLoading = false;
+            }
         }
-        return (data != null) ? data.size() : 0;
+        return data.size();
     }
 
     @Override
@@ -99,15 +114,17 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         rv.setTextViewText(R.id.businessName, yd.getBusinessName());
         rv.setTextViewText(R.id.businessRatingText, String.format(Locale.getDefault(),
                 "%.2f stars", yd.getRating()));
-        AsyncTask.execute(() -> loadImage(yd, rv));
+        if (yd.getBmp() != null) {
+            rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+        }
+        else {
+            AsyncTask.execute(() -> loadImage(yd));
+        }
         return rv;
     }
 
-    private void loadImage(YelpData yd, final RemoteViews rv) {
-        if (yd.getBmp() != null) {
-            handler.post(() -> rv.setImageViewBitmap(R.id.businessImg, yd.getBmp()));
-            return;
-        }
+    private void loadImage(YelpData yd) {
+        Log.d(getClass().getSimpleName(), "loadImage()");
         Request request = new Request.Builder()
                 .url(yd.getImageUrl())
                 .build();
@@ -124,7 +141,6 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                 Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
                 if (bmp != null) {
                     yd.setBmp(bmp);
-                    handler.post(() -> rv.setImageViewBitmap(R.id.businessImg, yd.getBmp()));
                 }
             }
         });
