@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -62,10 +63,10 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         isLoading = true;
         AsyncTask.execute(() -> {
             List<YelpData> cached = db.dao().getAll();
-            if (cached != null && cached.size() > 0) {
+            if (cached != null && cached.size() > 0 && !data.equals(cached)) {
                 data = cached;
                 Collections.sort(data, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
-                for(YelpData yd : data){
+                for (YelpData yd : data) {
                     loadImage(yd);
                 }
             }
@@ -85,20 +86,26 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public int getCount() {
         Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", data.size()));
+
+        //todo
         while ((data == null || data.size() == 0) && isLoading) {
             try {
+                Log.d(getClass().getSimpleName(), "getCount() blocking wait while images / data loads");
                 Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if(data != null && data.size() > 0) {
+            if (data != null && data.size() > 0) {
                 int count = 0;
                 for (YelpData yd : data) {
-                    if(yd.getBmp() != null){
+                    if (yd.getBmp() != null) {
                         count++;
                     }
                 }
-                if(count == data.size()) isLoading = false;
+                if (count == data.size()) {
+                    isLoading = false;
+                    WanderingWidget.sendRefreshBroadcast(context);
+                }
             }
         }
         return data.size();
@@ -116,9 +123,40 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                 "%.2f stars", yd.getRating()));
         if (yd.getBmp() != null) {
             rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
-        }
-        else {
-            AsyncTask.execute(() -> loadImage(yd));
+        } else {
+//            AsyncTask.execute(() -> loadImage(yd));
+            final AtomicBoolean isWaiting = new AtomicBoolean();
+            isWaiting.set(true);
+            Request request = new Request.Builder()
+                    .url(yd.getImageUrl())
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    e.printStackTrace();
+                    isWaiting.set(false);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
+                    Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
+                    if (bmp != null) {
+                        yd.setBmp(bmp);
+                        isWaiting.set(false);
+                    }
+                }
+            });
+            //todo
+            while (isWaiting.get()) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+            }
         }
         return rv;
     }

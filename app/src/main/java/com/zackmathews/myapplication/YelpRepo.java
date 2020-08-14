@@ -28,7 +28,6 @@ public class YelpRepo {
 
     public interface Listener {
         void onDataLoaded();
-
         void onDataPersisted();
     }
 
