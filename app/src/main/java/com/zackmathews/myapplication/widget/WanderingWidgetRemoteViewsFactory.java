@@ -76,7 +76,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
-//        loadCached();
+        loadCached();
     }
 
     @Override
