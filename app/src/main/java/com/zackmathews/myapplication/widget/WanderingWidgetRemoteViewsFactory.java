@@ -21,9 +21,7 @@ import com.zackmathews.myapplication.YelpData;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,7 +31,9 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
+/**
+ * Adapter for widget ListView. Loads data from room db.
+ */
 public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     private Context context;
     private List<YelpData> data = new ArrayList<>();

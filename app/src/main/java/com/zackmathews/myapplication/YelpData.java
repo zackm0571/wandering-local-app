@@ -15,6 +15,9 @@ import androidx.room.PrimaryKey;
 import androidx.room.Query;
 import androidx.room.Update;
 
+/**
+ * Model for yelp api results. Room uses this as an Entity for database schema.
+ */
 @Entity(tableName = "yelpData")
 public class YelpData {
     public YelpData() {

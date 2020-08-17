@@ -12,25 +12,20 @@ import android.widget.RemoteViews;
 
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
-import com.zackmathews.myapplication.YelpData;
 import com.zackmathews.myapplication.YelpRepo;
 
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
 
 /**
  * Implementation of App Widget functionality.
  * App Widget Configuration implemented in {@link WanderingWidgetConfigureActivity WanderingWidgetConfigureActivity}
+ * todo: set an alarm with an Intent that your AppWidgetProvider receives, using the AlarmManager. Set the alarm type to either ELAPSED_REALTIME or RTC, which will only deliver the alarm when the device is awake. Then set updatePeriodMillis to zero ("0"). (https://developer.android.com/guide/topics/appwidgets)
  */
 public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Listener {
     public static int[] appWidgetIds;
     private YelpRepo repo;
     private Handler handler = new Handler();
     private Context context;
+
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
         // Construct the RemoteViews object
@@ -58,10 +53,10 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
             appWidgetManager.updateAppWidget(appWidgetId, views);
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
         }
-        if(ServiceLocator.getDb() == null){
+        if (ServiceLocator.getDb() == null) {
             ServiceLocator.buildDb(context);
         }
-        if(repo == null){
+        if (repo == null) {
             repo = new YelpRepo(context);
         }
         repo.setListener(this);
@@ -103,10 +98,10 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         this.context = context;
         final String action = intent.getAction();
         if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
-            if(ServiceLocator.getDb() == null){
+            if (ServiceLocator.getDb() == null) {
                 ServiceLocator.buildDb(context);
             }
-            if(repo == null){
+            if (repo == null) {
                 repo = new YelpRepo(context);
             }
             repo.setListener(this);
