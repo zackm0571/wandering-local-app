@@ -1,5 +1,6 @@
 package com.zackmathews.myapplication.widget;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -50,8 +51,15 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
             RemoteViews views = new RemoteViews(
                     context.getPackageName(),
                     R.layout.wandering_widget);
+            // Set list adapter
             Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
             views.setRemoteAdapter(R.id.widgetList, intent);
+            // Refresh data when button clicked
+            Intent refreshIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            intent.setComponent(new ComponentName(context, WanderingWidget.class));
+            intent.setComponent(new ComponentName(context, WanderingWidgetRemoteViewsFactory.class));
+            views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context, 0, refreshIntent, 0));
+            // Update the widget / adapter
             appWidgetManager.updateAppWidget(appWidgetId, views);
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
         }

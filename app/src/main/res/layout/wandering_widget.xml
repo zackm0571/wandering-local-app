@@ -1,30 +1,49 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:background="@drawable/rounded_border"
+    android:orientation="vertical"
     android:padding="@dimen/widget_margin">
 
-    <TextView
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"
-        android:textSize="24sp"
-        android:text="Wandering Coffee"/>
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/widgetTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="0.7"
+            android:text="Wandering Coffee"
+            android:textSize="24sp" />
+
+        <ImageButton
+            android:id="@+id/refreshButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="5dp"
+            android:alpha="0.70"
+            android:background="@android:drawable/stat_notify_sync"
+            android:backgroundTint="@android:color/black"/>
+
+    </LinearLayout>
     <ImageView
-        android:background="@android:color/black"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
-        />
+        android:layout_marginTop="10dp"
+        android:background="@android:color/black" />
+
     <ListView
         android:id="@+id/widgetList"
-        android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/yelp_business_row_widget"/>
+        android:padding="10dp"
+        tools:listitem="@layout/yelp_business_row_widget" />
 
 </LinearLayout>
