@@ -5,11 +5,13 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.RemoteViews;
 
+import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.YelpRepo;
@@ -59,6 +61,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         if (repo == null) {
             repo = new YelpRepo(context);
         }
+        repo.setLocation(getLocationString());
         repo.setListener(this);
         repo.search();
     }
@@ -119,6 +122,10 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         context.sendBroadcast(intent);
     }
 
+    private String getLocationString(){
+        SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_NAME, 0);
+        return prefs.getString(Constants.PREF_LOCATION_KEY, "");
+    }
     @Override
     public void onDataLoaded() {
     }

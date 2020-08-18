@@ -3,4 +3,8 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="configure">Configure</string>
     <string name="add_widget">Add widget</string>
+    <string name="use_my_location">Use my location</string>
+    <string name="categories">Categories</string>
+    <string name="city_state_hint">City, State</string>
+    <string name="location">Location</string>
 </resources>

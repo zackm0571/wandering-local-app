@@ -14,6 +14,10 @@ public class MainViewModel extends ViewModel {
         return yelpData;
     }
 
+    public void setLocation(String location){
+        repo.setLocation(location);
+    }
+
     public void refresh() {
         yelpData = repo.search();
     }

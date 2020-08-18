@@ -21,9 +21,18 @@ public class YelpRepo {
     private MvvmDatabase db;
     private Context context;
     private Listener listener;
+    private String location;
 
     public void setListener(Listener listener) {
         this.listener = listener;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public interface Listener {
@@ -46,6 +55,7 @@ public class YelpRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
+        if(getLocation() == null || getLocation().length() == 0) return data;
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
@@ -60,7 +70,7 @@ public class YelpRepo {
                     data.setRating(b.getRating());
                     results.add(data);
                 }
-                data.setValue(results);
+                data.postValue(results);
                 if (listener != null) listener.onDataLoaded();
                 persist(results);
             }
@@ -68,8 +78,9 @@ public class YelpRepo {
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
                 AsyncTask.execute(() -> {
+                    Log.e(getClass().getSimpleName(), call.request().toString());
                     List<YelpData> cached = db.dao().getAll();
-                    data.setValue(cached);
+                    data.postValue(cached);
                 });
             }
         }, builder);
@@ -77,11 +88,11 @@ public class YelpRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLocation("San Francisco").setTerm("Coffee"));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setLocation(getLocation()).setTerm("Coffee"));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLocation("San Francisco").setTerm("Coffee"));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLocation(getLocation()).setTerm("Coffee"));
     }
 
     private void persist(List<YelpData> entries) {
