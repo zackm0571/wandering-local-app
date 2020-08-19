@@ -107,6 +107,9 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                     WanderingWidget.sendRefreshBroadcast(context);
                 }
             }
+            else{
+                loadCached();
+            }
         }
         return data.size();
     }

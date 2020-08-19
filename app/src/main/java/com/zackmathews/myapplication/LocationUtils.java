@@ -30,6 +30,6 @@ public class LocationUtils {
         String postalCode = addresses.get(0).getPostalCode();
         String knownName = addresses.get(0).getFeatureName(); // On
 
-        return city + ",  " + state;
+        return city + ", " + state;
     }
 }

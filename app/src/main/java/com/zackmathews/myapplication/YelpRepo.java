@@ -20,8 +20,10 @@ public class YelpRepo {
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private MvvmDatabase db;
     private Context context;
-    private Listener listener;
+    private String searchTerm;
     private String location;
+    private Listener listener;
+
 
     public void setListener(Listener listener) {
         this.listener = listener;
@@ -35,8 +37,18 @@ public class YelpRepo {
         this.location = location;
     }
 
+    public String getSearchTerm() {
+        if(searchTerm == null) searchTerm = "";
+        return searchTerm;
+    }
+
+    public void setSearchTerm(String searchTerm) {
+        this.searchTerm = searchTerm;
+    }
+
     public interface Listener {
         void onDataLoaded();
+
         void onDataPersisted();
     }
 
@@ -55,7 +67,7 @@ public class YelpRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        if(getLocation() == null || getLocation().length() == 0) return data;
+        if (getLocation() == null || getLocation().length() == 0) return data;
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
@@ -88,11 +100,11 @@ public class YelpRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLocation(getLocation()).setTerm("Coffee"));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setLocation(getLocation()).setTerm(getSearchTerm()));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLocation(getLocation()).setTerm("Coffee"));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLocation(getLocation()).setTerm(getSearchTerm()));
     }
 
     private void persist(List<YelpData> entries) {

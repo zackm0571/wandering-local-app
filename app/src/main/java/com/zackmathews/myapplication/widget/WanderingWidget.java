@@ -69,7 +69,8 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         if (repo == null) {
             repo = new YelpRepo(context);
         }
-        repo.setLocation(getLocationString());
+        repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
+        repo.setSearchTerm(getStringPreference(Constants.PREF_CATEGORY_KEY));
         repo.setListener(this);
         repo.search();
     }
@@ -130,10 +131,12 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
         context.sendBroadcast(intent);
     }
 
-    private String getLocationString(){
+    //todo: access shared prefs from helper
+    private String getStringPreference(String key) {
         SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_NAME, 0);
-        return prefs.getString(Constants.PREF_LOCATION_KEY, "");
+        return prefs.getString(key, "");
     }
+
     @Override
     public void onDataLoaded() {
     }

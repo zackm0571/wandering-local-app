@@ -19,8 +19,8 @@
         android:layout_marginBottom="8dp"
         android:inputType="textPostalAddress"
         android:autofillHints="Location" />
-    <Button
-        android:id="@+id/useMyLocation_button"
+    <CheckBox
+        android:id="@+id/useMyLocation_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -36,8 +36,10 @@
         android:id="@+id/category_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:checkedButton="@id/coffee_button"
         android:layout_marginBottom="8dp">
         <RadioButton
+            android:id="@+id/coffee_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Coffee"/>
@@ -48,8 +50,17 @@
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Custom"/>
+            android:text="@string/custom_search_term"/>
     </RadioGroup>
+
+    <EditText
+        android:id="@+id/custom_search_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp"
+        android:hint="@string/custom_search_term"
+        />
     <Button
         android:id="@+id/add_button"
         android:layout_width="wrap_content"
@@ -70,5 +81,12 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone"
         android:text="@string/configure" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"/>
 
 </LinearLayout>
