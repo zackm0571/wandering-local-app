@@ -67,7 +67,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
             ServiceLocator.buildDb(context);
         }
         if (repo == null) {
-            repo = new YelpRepo(context);
+            repo = ServiceLocator.getYelpRepo(context);
         }
         repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
         repo.setSearchTerm(getStringPreference(Constants.PREF_CATEGORY_KEY));

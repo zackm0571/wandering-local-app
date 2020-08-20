@@ -1,29 +1,47 @@
 package com.zackmathews.myapplication;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 
 import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.SearchResponse;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.lifecycle.MutableLiveData;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class YelpRepo {
+    private static final double MIN_RATING = 4.0;
     private YelpApi yelpApi;
+
+    public MutableLiveData<List<YelpData>> getData() {
+        if (data == null) {
+            data = new MutableLiveData<>();
+            data.setValue(new ArrayList<>());
+        }
+        return data;
+    }
+
+    private Handler handler = new Handler();
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private MvvmDatabase db;
     private Context context;
     private String searchTerm;
     private String location;
     private Listener listener;
-
+    private OkHttpClient client = new OkHttpClient();
 
     public void setListener(Listener listener) {
         this.listener = listener;
@@ -38,7 +56,7 @@ public class YelpRepo {
     }
 
     public String getSearchTerm() {
-        if(searchTerm == null) searchTerm = "";
+        if (searchTerm == null) searchTerm = "";
         return searchTerm;
     }
 
@@ -55,6 +73,9 @@ public class YelpRepo {
     public YelpRepo() {
         yelpApi = new YelpApi();
         db = ServiceLocator.getDb();
+        if (db != null) {
+            loadCached();
+        }
     }
 
     public YelpRepo(Context context) {
@@ -64,6 +85,7 @@ public class YelpRepo {
             ServiceLocator.buildDb(context);
         }
         db = ServiceLocator.getDb();
+        loadCached();
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
@@ -80,8 +102,11 @@ public class YelpRepo {
                     data.setImageUrl(b.getImageUrl());
                     data.setYelpUrl(b.getUrl());
                     data.setRating(b.getRating());
+                    data.setSearchTerm(getSearchTerm());
                     results.add(data);
                 }
+                Collections.sort(results, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+
                 data.postValue(results);
                 if (listener != null) listener.onDataLoaded();
                 persist(results);
@@ -114,6 +139,45 @@ public class YelpRepo {
             ServiceLocator.getDb().dao().addEntries(entries);
             if (listener != null) listener.onDataPersisted();
             Log.d(getClass().getSimpleName(), String.format("Persisting %d items to db", entries.size()));
+        });
+    }
+
+    private void loadCached() {
+        Log.d(getClass().getSimpleName(), "loadCached");
+        AsyncTask.execute(() -> {
+            List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
+            if (cached != null && cached.size() > 0 && (data.getValue() == null || data.getValue().size() == 0)) {
+                handler.post(() -> {
+                    Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+                    data.setValue(cached);
+                    for (YelpData yd : data.getValue()) {
+                        loadImage(yd);
+                    }
+                });
+            }
+        });
+    }
+
+    private void loadImage(final YelpData yd) {
+        Log.d(getClass().getSimpleName(), "loadImage()");
+        Request request = new Request.Builder()
+                .url(yd.getImageUrl())
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
+                byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
+                Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
+                if (bmp != null) {
+                    yd.setBmp(bmp);
+                }
+            }
         });
     }
 }

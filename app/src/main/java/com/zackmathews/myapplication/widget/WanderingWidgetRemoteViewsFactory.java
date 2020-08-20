@@ -18,6 +18,7 @@ import com.zackmathews.myapplication.MvvmDatabase;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.YelpData;
+import com.zackmathews.myapplication.YelpRepo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,57 +27,43 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.lifecycle.MutableLiveData;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
 /**
  * Adapter for widget ListView. Loads data from room db.
  */
 public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     private Context context;
     private List<YelpData> data = new ArrayList<>();
-    private MvvmDatabase db;
     private OkHttpClient client = new OkHttpClient();
     private Handler handler = new Handler();
     private boolean isLoading = false;
+    private YelpRepo repo;
+    private MutableLiveData<List<YelpData>> liveData;
 
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
-        this.context = applicationContext;
         Log.d(getClass().getSimpleName(), "constructor");
+        this.context = applicationContext;
+        repo = ServiceLocator.getYelpRepo(applicationContext);
+        liveData = repo.getData();
     }
 
     @Override
     public void onCreate() {
         Log.d(getClass().getSimpleName(), "onCreate");
-        if (ServiceLocator.getDb() == null) {
-            db = ServiceLocator.buildDb(context);
-        }
-        db = ServiceLocator.getDb();
-        handler = new Handler(Looper.getMainLooper());
-        loadCached();
-    }
 
-    private void loadCached() {
-        Log.d(getClass().getSimpleName(), "loadCached");
-        isLoading = true;
-        AsyncTask.execute(() -> {
-            List<YelpData> cached = db.dao().getAll();
-            if (cached != null && cached.size() > 0 && !data.equals(cached)) {
-                data = cached;
-                Collections.sort(data, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
-                for (YelpData yd : data) {
-                    loadImage(yd);
-                }
-            }
-        });
+        handler = new Handler(Looper.getMainLooper());
     }
 
     @Override
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
-        loadCached();
+        repo.search();
     }
 
     @Override
@@ -85,41 +72,40 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     @Override
     public int getCount() {
-        Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", data.size()));
+        Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", liveData.getValue() != null ? liveData.getValue().size() : 0));
 
         //todo
-        while ((data == null || data.size() == 0) && isLoading) {
+        while ((liveData.getValue() == null || liveData.getValue().size() == 0) && isLoading) {
             try {
                 Log.d(getClass().getSimpleName(), "getCount() blocking wait while images / data loads");
                 Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (data != null && data.size() > 0) {
+            if (liveData.getValue() != null && liveData.getValue().size() > 0) {
                 int count = 0;
-                for (YelpData yd : data) {
+                for (YelpData yd : liveData.getValue()) {
                     if (yd.getBmp() != null) {
                         count++;
                     }
                 }
-                if (count == data.size()) {
+                if (count == liveData.getValue().size()) {
                     isLoading = false;
                     WanderingWidget.sendRefreshBroadcast(context);
                 }
             }
-            else{
-                loadCached();
-            }
+
         }
-        return data.size();
+        return liveData.getValue().size();
     }
 
     @Override
     public RemoteViews getViewAt(int i) {
         Log.d(getClass().getSimpleName(), String.format("getViewAt(%d)", i));
-        if (i == AdapterView.INVALID_POSITION || data == null || data.size() == 0) return null;
+        if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0)
+            return null;
 
-        YelpData yd = data.get(i);
+        YelpData yd = liveData.getValue().get(i);
         final RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.yelp_business_row_widget);
         rv.setTextViewText(R.id.businessName, yd.getBusinessName());
         rv.setTextViewText(R.id.businessRatingText, String.format(Locale.getDefault(),
@@ -127,7 +113,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         if (yd.getBmp() != null) {
             rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
         } else {
-//            AsyncTask.execute(() -> loadImage(yd));
+            //            AsyncTask.execute(() -> loadImage(yd));
             final AtomicBoolean isWaiting = new AtomicBoolean();
             isWaiting.set(true);
             Request request = new Request.Builder()
@@ -165,6 +151,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     }
 
     private void loadImage(YelpData yd) {
+        //todo move to repo
         Log.d(getClass().getSimpleName(), "loadImage()");
         Request request = new Request.Builder()
                 .url(yd.getImageUrl())

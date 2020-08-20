@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.LocationUtils;
 import com.zackmathews.myapplication.R;
+import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.YelpRepo;
 
 import java.util.ArrayList;
@@ -126,7 +127,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             WanderingWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
 
-            repo = new YelpRepo(WanderingWidgetConfigureActivity.this);
+            repo = ServiceLocator.getYelpRepo(context);
             repo.setLocation(location);
             repo.setSearchTerm(category);
             repo.search();

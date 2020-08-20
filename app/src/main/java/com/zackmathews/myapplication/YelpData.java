@@ -28,6 +28,9 @@ public class YelpData {
         @Query("SELECT * FROM yelpdata LIMIT 10")
         List<YelpData> getAll();
 
+        @Query("SELECT * FROM yelpdata WHERE searchTerm == :searchTerm AND rating > :rating LIMIT 10")
+        List<YelpData> getDataWithParams(String searchTerm, double rating);
+
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         void addEntries(List<YelpData> data);
 
@@ -92,4 +95,14 @@ public class YelpData {
     public void setRating(double rating) {
         this.rating = rating;
     }
+    @ColumnInfo(name = "searchTerm")
+    private String searchTerm;
+    public String getSearchTerm() {
+        return searchTerm;
+    }
+
+    public void setSearchTerm(String searchTerm) {
+        this.searchTerm = searchTerm;
+    }
+
 }
