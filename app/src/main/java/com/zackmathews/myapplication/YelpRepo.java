@@ -52,6 +52,7 @@ public class YelpRepo {
     }
 
     public void setLocation(String location) {
+        if(location == null) location = "";
         this.location = location;
     }
 
@@ -89,6 +90,7 @@ public class YelpRepo {
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
         if (getLocation() == null || getLocation().length() == 0) return data;
+        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, searchTerm=%s", getLocation(), getSearchTerm()));
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
@@ -116,7 +118,7 @@ public class YelpRepo {
             public void onFailure(Call<SearchResponse> call, Throwable t) {
                 AsyncTask.execute(() -> {
                     Log.e(getClass().getSimpleName(), call.request().toString());
-                    List<YelpData> cached = db.dao().getAll();
+                    List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
                     if(cached.size() > 0) {
                         Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                         data.postValue(cached);
@@ -153,9 +155,6 @@ public class YelpRepo {
                 handler.post(() -> {
                     Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                     data.setValue(cached);
-                    for (YelpData yd : data.getValue()) {
-                        loadImage(yd);
-                    }
                 });
             }
         });

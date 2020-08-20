@@ -2,6 +2,7 @@ package com.zackmathews.myapplication.widget;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -13,6 +14,7 @@ import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import com.squareup.picasso.Picasso;
+import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.IOUtils;
 import com.zackmathews.myapplication.MvvmDatabase;
 import com.zackmathews.myapplication.R;
@@ -33,6 +35,8 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static com.zackmathews.myapplication.Constants.PREFS_NAME;
 
 /**
  * Adapter for widget ListView. Loads data from room db.
@@ -63,8 +67,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
-        repo.search();
-        liveData = repo.getData();
+        refreshRepo();
     }
 
     @Override
@@ -76,7 +79,13 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", liveData.getValue() != null ? liveData.getValue().size() : 0));
         isLoading = true;
         //todo
+        int iterations = 0;
+        final int ITRS_BEFORE_SEARCH = 5;
         while ((liveData.getValue() == null || liveData.getValue().size() == 0) && isLoading) {
+            iterations++;
+            if(iterations >= ITRS_BEFORE_SEARCH){
+                refreshRepo();
+            }
             try {
                 Log.d(getClass().getSimpleName(), "getCount() blocking wait while images / data loads");
                 Thread.sleep(250);
@@ -103,7 +112,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public RemoteViews getViewAt(int i) {
         Log.d(getClass().getSimpleName(), String.format("getViewAt(%d)", i));
-        if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0)
+        if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0 || i >= liveData.getValue().size())
             return null;
 
         YelpData yd = liveData.getValue().get(i);
@@ -173,6 +182,20 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                 }
             }
         });
+    }
+
+    private void refreshRepo(){
+        String location = loadStringPref(context, Constants.PREF_LOCATION_KEY);
+        String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY);
+        repo.setLocation(location);
+        repo.setSearchTerm(searchTerm);
+        repo.search();
+        Log.d(getClass().getSimpleName(), String.format("Refreshing repo, location = %s, searchTerm = %s", location, searchTerm));
+    }
+
+    static String loadStringPref(Context context, String key) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+        return prefs.getString(key, "");
     }
 
     @Override

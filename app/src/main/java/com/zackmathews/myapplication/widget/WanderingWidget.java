@@ -143,7 +143,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
 
     @Override
     public void onDataPersisted() {
-        
+
     }
 }
 

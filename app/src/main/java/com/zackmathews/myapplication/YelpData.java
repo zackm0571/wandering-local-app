@@ -28,7 +28,7 @@ public class YelpData {
         @Query("SELECT * FROM yelpdata LIMIT 10")
         List<YelpData> getAll();
 
-        @Query("SELECT * FROM yelpdata WHERE searchTerm == :searchTerm AND rating > :rating LIMIT 10")
+        @Query("SELECT * FROM yelpdata WHERE searchTerm = :searchTerm AND rating > :rating LIMIT 10")
         List<YelpData> getDataWithParams(String searchTerm, double rating);
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
