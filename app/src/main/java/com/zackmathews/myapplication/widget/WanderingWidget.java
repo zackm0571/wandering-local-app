@@ -143,9 +143,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
 
     @Override
     public void onDataPersisted() {
-        handler.postDelayed(() -> {
-            sendRefreshBroadcast(context);
-        }, 500);
+        
     }
 }
 

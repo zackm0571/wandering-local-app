@@ -66,7 +66,6 @@ public class YelpRepo {
 
     public interface Listener {
         void onDataLoaded();
-
         void onDataPersisted();
     }
 
@@ -106,10 +105,11 @@ public class YelpRepo {
                     results.add(data);
                 }
                 Collections.sort(results, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
-
-                data.postValue(results);
-                if (listener != null) listener.onDataLoaded();
-                persist(results);
+                if(results.size() > 0) {
+                    data.postValue(results);
+                    if (listener != null) listener.onDataLoaded();
+                    persist(results);
+                }
             }
 
             @Override
@@ -117,7 +117,10 @@ public class YelpRepo {
                 AsyncTask.execute(() -> {
                     Log.e(getClass().getSimpleName(), call.request().toString());
                     List<YelpData> cached = db.dao().getAll();
-                    data.postValue(cached);
+                    if(cached.size() > 0) {
+                        Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+                        data.postValue(cached);
+                    }
                 });
             }
         }, builder);

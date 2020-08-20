@@ -64,6 +64,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
         repo.search();
+        liveData = repo.getData();
     }
 
     @Override
@@ -73,7 +74,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public int getCount() {
         Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", liveData.getValue() != null ? liveData.getValue().size() : 0));
-
+        isLoading = true;
         //todo
         while ((liveData.getValue() == null || liveData.getValue().size() == 0) && isLoading) {
             try {
@@ -94,9 +95,9 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                     WanderingWidget.sendRefreshBroadcast(context);
                 }
             }
-
         }
-        return liveData.getValue().size();
+
+        return liveData.getValue() != null ? liveData.getValue().size() : 0;
     }
 
     @Override
