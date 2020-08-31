@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private YelpApi yelpApi;
-    private YelpAdapter yelpAdapter;
+    private WLTimeLineAdapter yelpAdapter;
     private MainViewModel viewModel;
     private boolean isLoading = false;
     private LocationManager locationManager;
@@ -35,33 +36,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initViewModel();
+        initLocationServices();
         initRecyclerView();
         ServiceLocator.buildDb(this);
-        viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
-                getInstance(getApplication())).get(MainViewModel.class);
-        viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
-            @Override
-            public void onChanged(List<YelpData> yelpData) {
-                yelpAdapter.setData(yelpData);
-                isLoading = false;
-            }
-        });
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions();
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    protected void requestPermissions() {
-        List<String> permissionsToRequest = new ArrayList<>();
-        for (String permission : Constants.PERMISSIONS) {
-            if (checkSelfPermission(permission) == PackageManager.PERMISSION_DENIED) {
-                permissionsToRequest.add(permission);
-            }
-        }
-        if (permissionsToRequest.size() > 0) {
-            requestPermissions(permissionsToRequest.toArray(new String[permissionsToRequest.size()]), REQUEST_CODE);
-        }
     }
 
     @Override
@@ -76,7 +54,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void initViewModel(){
+        Log.d(getClass().getSimpleName(), "Initializing view model...");
+        viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
+                getInstance(getApplication())).get(MainViewModel.class);
+        viewModel.setSearchTerm(WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
+        viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
+            @Override
+            public void onChanged(List<YelpData> yelpData) {
+                yelpAdapter.setData(yelpData);
+                isLoading = false;
+            }
+        });
+    }
+
     private void initLocationServices() {
+        Log.d(getClass().getSimpleName(), "Initializing location services...");
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -87,25 +80,29 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        viewModel.setLocation(LocationUtils.getCityStateFormattedStringFromLocation(this, location));
-        viewModel.refresh();
+        if(location != null) {
+            viewModel.setLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+            viewModel.refresh();
+        }
     }
-    public void initRecyclerView() {
+
+    void initRecyclerView() {
+        Log.d(getClass().getSimpleName(), "Initializing recycler view...");
         recyclerView = findViewById(R.id.recyclerView);
-        yelpAdapter = new YelpAdapter(this);
+        yelpAdapter = new WLTimeLineAdapter(this);
         recyclerView.setAdapter(yelpAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                if (!isLoading) {
-                    if (linearLayoutManager != null && linearLayoutManager.findLastCompletelyVisibleItemPosition() >= yelpAdapter.getItemCount() - 5) {
-                        viewModel.getNextPage();
-                        isLoading = true;
-                    }
-                }
+//                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+//                if (!isLoading) {
+//                    if (linearLayoutManager != null && linearLayoutManager.findLastCompletelyVisibleItemPosition() >= yelpAdapter.getItemCount() - 5) {
+//                        viewModel.getNextPage();
+//                        isLoading = true;
+//                    }
+//                }
             }
         });
     }

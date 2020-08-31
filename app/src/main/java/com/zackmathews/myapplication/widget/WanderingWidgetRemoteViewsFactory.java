@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -13,18 +12,15 @@ import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
-import com.squareup.picasso.Picasso;
 import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.IOUtils;
-import com.zackmathews.myapplication.MvvmDatabase;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.YelpData;
-import com.zackmathews.myapplication.YelpRepo;
+import com.zackmathews.myapplication.TimelineRepo;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +43,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     private OkHttpClient client = new OkHttpClient();
     private Handler handler = new Handler();
     private boolean isLoading = false;
-    private YelpRepo repo;
+    private TimelineRepo repo;
     private MutableLiveData<List<YelpData>> liveData;
 
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
@@ -60,7 +56,6 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public void onCreate() {
         Log.d(getClass().getSimpleName(), "onCreate");
-
         handler = new Handler(Looper.getMainLooper());
     }
 

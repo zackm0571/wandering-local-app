@@ -17,7 +17,7 @@ public class LocationUtils {
         geocoder = new Geocoder(context, Locale.getDefault());
 
         try {
-            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
+            addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
         } catch (IOException e) {
             e.printStackTrace();
             return "";

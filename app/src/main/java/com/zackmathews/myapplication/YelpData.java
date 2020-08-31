@@ -17,6 +17,7 @@ import androidx.room.Update;
 
 /**
  * Model for yelp api results. Room uses this as an Entity for database schema.
+ * todo: migrate db into {@link WLTimelineEntry}
  */
 @Entity(tableName = "yelpData")
 public class YelpData {

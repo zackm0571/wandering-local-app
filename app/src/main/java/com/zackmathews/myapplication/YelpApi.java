@@ -34,6 +34,8 @@ public class YelpApi {
         public static final String PARAM_LOCATION = "location";
         public static final String PARAM_LIMIT = "limit";
         public static final String PARAM_OFFSET = "offset";
+        public static final String PARAM_LATITUDE = "latitude";
+        public static final String PARAM_LONGITUDE = "longitude";
         Map<String, String> map = new HashMap<>();
 
         public SearchBuilder setTerm(String term) {
@@ -42,7 +44,9 @@ public class YelpApi {
         }
 
         public SearchBuilder setLocation(String location) {
-            map.put(PARAM_LOCATION, location);
+            if(location.length() > 0) {
+                map.put(PARAM_LOCATION, location);
+            }
             return this;
         }
 
@@ -53,6 +57,14 @@ public class YelpApi {
 
         public SearchBuilder setOffset(int offset) {
             map.put(PARAM_OFFSET, String.valueOf(offset));
+            return this;
+        }
+
+        public SearchBuilder setLatLng(String lat, String lng) {
+            if(lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
+                map.put(PARAM_LATITUDE, lat);
+                map.put(PARAM_LONGITUDE, lng);
+            }
             return this;
         }
 

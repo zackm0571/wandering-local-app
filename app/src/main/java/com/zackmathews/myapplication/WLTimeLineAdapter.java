@@ -21,7 +21,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> {
+public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.YelpBusiness> {
     private int displayHeight = -1;
     public int getDisplayHeight() {
         if(displayHeight == -1){
@@ -37,7 +37,7 @@ public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> 
     private List<YelpData> data = new ArrayList<>();
     private Context context;
 
-    public YelpAdapter(Context context){
+    public WLTimeLineAdapter(Context context){
         this.context = context;
     }
     public void addData(YelpData yd){
@@ -62,7 +62,7 @@ public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> 
             holder.textView.setText(yelpData.getBusinessName());
             holder.imgView.setImageBitmap(yelpData.getBmp());
 
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) holder.imgView.getLayoutParams();
+            ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
             params.height = getDisplayHeight() / 4;
             params.width = getDisplayHeight() / 4;
             holder.imgView.setLayoutParams(params);
@@ -70,14 +70,11 @@ public class YelpAdapter extends RecyclerView.Adapter<YelpAdapter.YelpBusiness> 
 
             holder.ratingBar.setNumStars(5);
             holder.ratingBar.setRating((float)yelpData.getRating());
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if(yelpData.getYelpUrl() == null) return;
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(yelpData.getYelpUrl()));
-                    context.startActivity(intent);
-                }
+            holder.itemView.setOnClickListener(view -> {
+                if(yelpData.getYelpUrl() == null) return;
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(yelpData.getYelpUrl()));
+                context.startActivity(intent);
             });
     }
 

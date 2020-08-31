@@ -22,7 +22,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class YelpRepo {
+public class TimelineRepo {
     private static final double MIN_RATING = 4.0;
     private YelpApi yelpApi;
 
@@ -36,10 +36,10 @@ public class YelpRepo {
 
     private Handler handler = new Handler();
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
-    private MvvmDatabase db;
+    private WLDatabase db;
     private Context context;
     private String searchTerm;
-    private String location;
+    private String location, lat, lng;
     private Listener listener;
     private OkHttpClient client = new OkHttpClient();
 
@@ -47,13 +47,29 @@ public class YelpRepo {
         this.listener = listener;
     }
 
+    private String getLat() {
+        if (lat == null) lat = "";
+        return lat;
+    }
+
+    private String getLng() {
+        if (lng == null) lng = "";
+        return lng;
+    }
+
     public String getLocation() {
+        if (location == null) location = "";
         return location;
     }
 
     public void setLocation(String location) {
-        if(location == null) location = "";
+        if (location == null) location = "";
         this.location = location;
+    }
+
+    public void setLocation(String lat, String lng) {
+        this.lat = lat;
+        this.lng = lng;
     }
 
     public String getSearchTerm() {
@@ -67,10 +83,11 @@ public class YelpRepo {
 
     public interface Listener {
         void onDataLoaded();
+
         void onDataPersisted();
     }
 
-    public YelpRepo() {
+    public TimelineRepo() {
         yelpApi = new YelpApi();
         db = ServiceLocator.getDb();
         if (db != null) {
@@ -78,7 +95,7 @@ public class YelpRepo {
         }
     }
 
-    public YelpRepo(Context context) {
+    public TimelineRepo(Context context) {
         this.context = context;
         yelpApi = new YelpApi();
         if (ServiceLocator.getDb() == null) {
@@ -89,8 +106,9 @@ public class YelpRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        if (getLocation() == null || getLocation().length() == 0) return data;
-        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, searchTerm=%s", getLocation(), getSearchTerm()));
+        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchTerm()));
+        if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
+            return data;
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
@@ -106,8 +124,9 @@ public class YelpRepo {
                     data.setSearchTerm(getSearchTerm());
                     results.add(data);
                 }
+                Log.d(getClass().getSimpleName(), String.format("Yelp search has returned %d results", results.size()));
                 Collections.sort(results, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
-                if(results.size() > 0) {
+                if (results.size() > 0) {
                     data.postValue(results);
                     if (listener != null) listener.onDataLoaded();
                     persist(results);
@@ -116,12 +135,14 @@ public class YelpRepo {
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
+                Log.e(getClass().getSimpleName(), call.request().toString());
                 AsyncTask.execute(() -> {
-                    Log.e(getClass().getSimpleName(), call.request().toString());
-                    List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
-                    if(cached.size() > 0) {
-                        Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
-                        data.postValue(cached);
+                    if (db != null) {
+                        List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
+                        if (cached.size() > 0) {
+                            Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+                            data.postValue(cached);
+                        }
                     }
                 });
             }
@@ -130,11 +151,11 @@ public class YelpRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLocation(getLocation()).setTerm(getSearchTerm()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm()));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLocation(getLocation()).setTerm(getSearchTerm()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm()));
     }
 
     private void persist(List<YelpData> entries) {

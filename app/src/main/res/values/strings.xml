@@ -8,4 +8,5 @@
     <string name="city_state_hint">City, State</string>
     <string name="location">Location</string>
     <string name="custom_search_term">Custom</string>
+    <string name="business_name">Business Name</string>
 </resources>

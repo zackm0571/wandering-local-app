@@ -16,7 +16,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -29,7 +28,7 @@ import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.LocationUtils;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
-import com.zackmathews.myapplication.YelpRepo;
+import com.zackmathews.myapplication.TimelineRepo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +46,7 @@ import static com.zackmathews.myapplication.Constants.PREF_PREFIX_KEY;
  */
 public class WanderingWidgetConfigureActivity extends Activity {
     private LocationManager locationManager;
-    YelpRepo repo;
+    TimelineRepo repo;
     HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     EditText locationText, customSearchText;

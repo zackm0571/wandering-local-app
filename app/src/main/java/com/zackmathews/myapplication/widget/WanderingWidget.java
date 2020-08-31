@@ -15,7 +15,7 @@ import android.widget.RemoteViews;
 import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
-import com.zackmathews.myapplication.YelpRepo;
+import com.zackmathews.myapplication.TimelineRepo;
 
 
 /**
@@ -23,9 +23,9 @@ import com.zackmathews.myapplication.YelpRepo;
  * App Widget Configuration implemented in {@link WanderingWidgetConfigureActivity WanderingWidgetConfigureActivity}
  * todo: set an alarm with an Intent that your AppWidgetProvider receives, using the AlarmManager. Set the alarm type to either ELAPSED_REALTIME or RTC, which will only deliver the alarm when the device is awake. Then set updatePeriodMillis to zero ("0"). (https://developer.android.com/guide/topics/appwidgets)
  */
-public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Listener {
+public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.Listener {
     public static int[] appWidgetIds;
-    private YelpRepo repo;
+    private TimelineRepo repo;
     private Handler handler = new Handler();
     private Context context;
 
@@ -114,7 +114,7 @@ public class WanderingWidget extends AppWidgetProvider implements YelpRepo.Liste
                 ServiceLocator.buildDb(context);
             }
             if (repo == null) {
-                repo = new YelpRepo(context);
+                repo = new TimelineRepo(context);
             }
             repo.setListener(this);
             AppWidgetManager manager = AppWidgetManager.getInstance(context);
