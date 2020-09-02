@@ -19,10 +19,14 @@
             android:layout_weight="0.7"
             android:scaleType="centerCrop" />
 
-
             <StackView
+                android:id="@+id/stackImageView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="80dp"
+                android:isScrollContainer="true"
+                android:animateLayoutChanges="true"
+                android:rotation = "-90"
+                android:layout_margin="10dp"/>
 
             <TextView
                 android:id="@+id/businessName"

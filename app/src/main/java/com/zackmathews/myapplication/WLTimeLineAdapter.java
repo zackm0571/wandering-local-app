@@ -9,8 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RatingBar;
+import android.widget.StackView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -80,6 +80,7 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
             intent.setData(Uri.parse(yelpData.getYelpUrl()));
             context.startActivity(intent);
         });
+        holder.stackView.setAdapter(new StackImageAdapter(yelpData.getPhotos()));
     }
 
     @Override
@@ -91,12 +92,14 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         RatingBar ratingBar;
         ImageView imgView;
         TextView textView;
+        StackView stackView;
 
         public YelpBusiness(@NonNull View itemView) {
             super(itemView);
             this.imgView = itemView.findViewById(R.id.businessImg);
             this.textView = itemView.findViewById(R.id.businessName);
             this.ratingBar = itemView.findViewById(R.id.businessRatingBar);
+            this.stackView = itemView.findViewById(R.id.stackImageView);
         }
     }
 }

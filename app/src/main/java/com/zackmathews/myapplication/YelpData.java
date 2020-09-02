@@ -26,10 +26,10 @@ public class YelpData {
 
     @Dao
     public interface YelpDAO {
-        @Query("SELECT * FROM yelpdata LIMIT 10")
+        @Query("SELECT * FROM yelpData LIMIT 10")
         List<YelpData> getAll();
 
-        @Query("SELECT * FROM yelpdata WHERE searchTerm = :searchTerm AND rating > :rating LIMIT 10")
+        @Query("SELECT * FROM yelpData WHERE searchTerm = :searchTerm AND rating > :rating LIMIT 10")
         List<YelpData> getDataWithParams(String searchTerm, double rating);
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -38,7 +38,7 @@ public class YelpData {
         @Update
         void updateEntries(List<YelpData> data);
 
-        @Query("DELETE FROM yelpdata")
+        @Query("DELETE FROM yelpData")
         void deleteEntries();
     }
 
@@ -67,6 +67,19 @@ public class YelpData {
 
     @ColumnInfo(name = "image_url")
     private String imageUrl;
+
+    //todo: add @TypeConverter @ColumnInfo(name = "images")
+    @Ignore
+    private List<String> photos;
+
+    public List<String> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(List<String> photos) {
+        this.photos = photos;
+    }
+
     @PrimaryKey
     @NonNull
     private String businessName = "";
@@ -96,8 +109,10 @@ public class YelpData {
     public void setRating(double rating) {
         this.rating = rating;
     }
+
     @ColumnInfo(name = "searchTerm")
     private String searchTerm;
+
     public String getSearchTerm() {
         return searchTerm;
     }

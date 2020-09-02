@@ -2,6 +2,7 @@ package com.zackmathews.myapplication;
 
 import com.yelp.fusion.client.connection.YelpFusionApi;
 import com.yelp.fusion.client.connection.YelpFusionApiFactory;
+import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.SearchResponse;
 
 import java.io.IOException;
@@ -29,6 +30,11 @@ public class YelpApi {
         call.enqueue(callback);
     }
 
+    public void getBusinessDetails(String id, Callback<Business> callback) {
+        Call<Business> businessCall = api.getBusiness(id);
+        businessCall.enqueue(callback);
+    }
+
     public static class SearchBuilder {
         public static final String PARAM_TERM = "term";
         public static final String PARAM_LOCATION = "location";
@@ -44,7 +50,7 @@ public class YelpApi {
         }
 
         public SearchBuilder setLocation(String location) {
-            if(location.length() > 0) {
+            if (location.length() > 0) {
                 map.put(PARAM_LOCATION, location);
             }
             return this;
@@ -61,7 +67,7 @@ public class YelpApi {
         }
 
         public SearchBuilder setLatLng(String lat, String lng) {
-            if(lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
+            if (lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
                 map.put(PARAM_LATITUDE, lat);
                 map.put(PARAM_LONGITUDE, lng);
             }

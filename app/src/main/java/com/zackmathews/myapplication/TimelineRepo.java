@@ -122,6 +122,19 @@ public class TimelineRepo {
                     data.setYelpUrl(b.getUrl());
                     data.setRating(b.getRating());
                     data.setSearchTerm(getSearchTerm());
+                    getImageUrlsForBusiness(b.getId(), new Callback<Business>() {
+                        @Override
+                        public void onResponse(Call<Business> call, Response<Business> response) {
+                            if (response != null && response.body() != null) {
+                                data.setPhotos(response.body().getPhotos());
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Business> call, Throwable t) {
+
+                        }
+                    });
                     results.add(data);
                 }
                 Log.d(getClass().getSimpleName(), String.format("Yelp search has returned %d results", results.size()));
@@ -179,6 +192,10 @@ public class TimelineRepo {
                 });
             }
         });
+    }
+
+    private void getImageUrlsForBusiness(String id, Callback<Business> callback) {
+        yelpApi.getBusinessDetails(id, callback);
     }
 
     private void loadImage(final YelpData yd) {
