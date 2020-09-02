@@ -9,4 +9,6 @@
     <string name="location">Location</string>
     <string name="custom_search_term">Custom</string>
     <string name="business_name">Business Name</string>
+    <string name="search">Search</string>
+    <string name="category">Category</string>
 </resources>

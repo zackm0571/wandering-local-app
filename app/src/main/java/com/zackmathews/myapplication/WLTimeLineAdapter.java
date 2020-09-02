@@ -23,11 +23,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.YelpBusiness> {
     private int displayHeight = -1;
+
     public int getDisplayHeight() {
-        if(displayHeight == -1){
+        if (displayHeight == -1) {
             DisplayMetrics displayMetrics = new DisplayMetrics();
-            WindowManager windowManager  =
-                    (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
+            WindowManager windowManager =
+                    (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             windowManager.getDefaultDisplay().getMetrics(displayMetrics);
             displayHeight = displayMetrics.heightPixels;
         }
@@ -37,17 +38,20 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
     private List<YelpData> data = new ArrayList<>();
     private Context context;
 
-    public WLTimeLineAdapter(Context context){
+    public WLTimeLineAdapter(Context context) {
         this.context = context;
     }
-    public void addData(YelpData yd){
+
+    public void addData(YelpData yd) {
         data.add(yd);
         notifyDataSetChanged();
     }
-    public void setData(List<YelpData> data){
+
+    public void setData(List<YelpData> data) {
         this.data = data;
         notifyDataSetChanged();
     }
+
     @NonNull
     @Override
     public YelpBusiness onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -58,24 +62,24 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
 
     @Override
     public void onBindViewHolder(@NonNull YelpBusiness holder, int position) {
-            final YelpData yelpData = data.get(position);
-            holder.textView.setText(yelpData.getBusinessName());
-            holder.imgView.setImageBitmap(yelpData.getBmp());
+        final YelpData yelpData = data.get(position);
+        holder.textView.setText(yelpData.getBusinessName());
+        holder.imgView.setImageBitmap(yelpData.getBmp());
 
-            ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
-            params.height = getDisplayHeight() / 4;
-            params.width = getDisplayHeight() / 4;
-            holder.imgView.setLayoutParams(params);
-            Picasso.get().load(Uri.decode(yelpData.getImageUrl())).into(holder.imgView);
+        ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
+        params.height = getDisplayHeight() / 4;
+        params.width = getDisplayHeight() / 4;
+        holder.imgView.setLayoutParams(params);
+        Picasso.get().load(Uri.decode(yelpData.getImageUrl())).into(holder.imgView);
 
-            holder.ratingBar.setNumStars(5);
-            holder.ratingBar.setRating((float)yelpData.getRating());
-            holder.itemView.setOnClickListener(view -> {
-                if(yelpData.getYelpUrl() == null) return;
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(yelpData.getYelpUrl()));
-                context.startActivity(intent);
-            });
+        holder.ratingBar.setNumStars(5);
+        holder.ratingBar.setRating((float) yelpData.getRating());
+        holder.itemView.setOnClickListener(view -> {
+            if (yelpData.getYelpUrl() == null) return;
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(yelpData.getYelpUrl()));
+            context.startActivity(intent);
+        });
     }
 
     @Override
@@ -83,10 +87,11 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         return data.size();
     }
 
-    class YelpBusiness extends RecyclerView.ViewHolder{
+    class YelpBusiness extends RecyclerView.ViewHolder {
         RatingBar ratingBar;
         ImageView imgView;
         TextView textView;
+
         public YelpBusiness(@NonNull View itemView) {
             super(itemView);
             this.imgView = itemView.findViewById(R.id.businessImg);
