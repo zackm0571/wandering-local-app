@@ -36,6 +36,8 @@ public class YelpApi {
         public static final String PARAM_OFFSET = "offset";
         public static final String PARAM_LATITUDE = "latitude";
         public static final String PARAM_LONGITUDE = "longitude";
+        public static final String PARAM_SORT_BY = "sort_by";
+        private static final String SORT_RATING = "rating";
         Map<String, String> map = new HashMap<>();
 
         public SearchBuilder setTerm(String term) {
@@ -44,7 +46,7 @@ public class YelpApi {
         }
 
         public SearchBuilder setLocation(String location) {
-            if(location.length() > 0) {
+            if (location.length() > 0) {
                 map.put(PARAM_LOCATION, location);
             }
             return this;
@@ -61,7 +63,7 @@ public class YelpApi {
         }
 
         public SearchBuilder setLatLng(String lat, String lng) {
-            if(lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
+            if (lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
                 map.put(PARAM_LATITUDE, lat);
                 map.put(PARAM_LONGITUDE, lng);
             }
@@ -69,6 +71,8 @@ public class YelpApi {
         }
 
         public Map<String, String> build() {
+            // Sort by rating by default.
+            map.put(PARAM_SORT_BY, SORT_RATING);
             return map;
         }
     }
