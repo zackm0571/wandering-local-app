@@ -12,13 +12,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 
 public class YelpApi {
-    private static final String API_KEY;
     private YelpFusionApi api;
 
     public YelpApi() {
         try {
             YelpFusionApiFactory apiFactory = new YelpFusionApiFactory();
-            api = apiFactory.createAPI(API_KEY);
+            api = apiFactory.createAPI(BuildConfig.YELP_API_KEY);
         } catch (IOException e) {
             e.printStackTrace();
         }
