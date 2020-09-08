@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.yelp.fusion.client.models.Business;
@@ -34,7 +35,7 @@ public class TimelineRepo {
         return data;
     }
 
-    private Handler handler = new Handler();
+    private Handler handler = new Handler(Looper.getMainLooper());
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private WLDatabase db;
     private Context context;
@@ -73,7 +74,7 @@ public class TimelineRepo {
     }
 
     public MutableLiveData<String> getSearchTerm() {
-        if (searchTerm == null){
+        if (searchTerm == null) {
             searchTerm = new MutableLiveData<>();
             searchTerm.setValue(Constants.DEFAULT_SEARCH_TERM);
         }
@@ -81,7 +82,7 @@ public class TimelineRepo {
     }
 
     public void setSearchTerm(String searchTerm) {
-        this.searchTerm.setValue(searchTerm);
+        getSearchTerm().setValue(searchTerm);
     }
 
     public interface Listener {
@@ -100,15 +101,15 @@ public class TimelineRepo {
         yelpApi = new YelpApi();
         if (ServiceLocator.getDb() == null) {
             db = ServiceLocator.buildDb(context);
-        }
-        else {
+        } else {
             db = ServiceLocator.getDb();
         }
+        loadCached();
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchTerm()));
-        if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
+        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchTerm().getValue()));
+        if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0 || getSearchTerm().getValue() == null)
             return data;
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
@@ -172,8 +173,9 @@ public class TimelineRepo {
 
     private void loadCached() {
         Log.d(getClass().getSimpleName(), "loadCached");
+        final String searchTerm = getSearchTerm().getValue();
         AsyncTask.execute(() -> {
-            List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm().getValue(), MIN_RATING);
+            List<YelpData> cached = db.dao().getDataWithParams(searchTerm, MIN_RATING);
             if (cached != null && cached.size() > 0 && (data.getValue() == null || data.getValue().size() == 0)) {
                 handler.post(() -> {
                     Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));

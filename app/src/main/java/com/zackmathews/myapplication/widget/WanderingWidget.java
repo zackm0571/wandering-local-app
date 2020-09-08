@@ -16,6 +16,7 @@ import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.TimelineRepo;
+import com.zackmathews.myapplication.WLPreferences;
 
 
 /**
@@ -76,9 +77,6 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onDeleted(Context context, int[] appWidgetIds) {
         // When the user deletes the widget, delete the preference associated with it.
         this.context = context;
-        for (int appWidgetId : appWidgetIds) {
-            WanderingWidgetConfigureActivity.deleteTitlePref(context, appWidgetId);
-        }
     }
 
     @Override

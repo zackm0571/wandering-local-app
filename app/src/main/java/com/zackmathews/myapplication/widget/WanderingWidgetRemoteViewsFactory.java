@@ -1,10 +1,16 @@
 package com.zackmathews.myapplication.widget;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -16,6 +22,8 @@ import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.IOUtils;
 import com.zackmathews.myapplication.R;
 import com.zackmathews.myapplication.ServiceLocator;
+import com.zackmathews.myapplication.WLDatabase;
+import com.zackmathews.myapplication.WLPreferences;
 import com.zackmathews.myapplication.YelpData;
 import com.zackmathews.myapplication.TimelineRepo;
 
@@ -25,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MutableLiveData;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -32,7 +41,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.content.Context.LOCATION_SERVICE;
 import static com.zackmathews.myapplication.Constants.PREFS_NAME;
+import static com.zackmathews.myapplication.WLPreferences.loadStringPref;
 
 /**
  * Adapter for widget ListView. Loads data from room db.
@@ -45,24 +56,31 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     private boolean isLoading = false;
     private TimelineRepo repo;
     private MutableLiveData<List<YelpData>> liveData;
+    private WLDatabase db;
 
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
         Log.d(getClass().getSimpleName(), "constructor");
         this.context = applicationContext;
         repo = new TimelineRepo(context);
         liveData = repo.getData();
+        if (ServiceLocator.getDb() == null) {
+            ServiceLocator.buildDb(context);
+        }
+        db = ServiceLocator.getDb();
     }
 
     @Override
     public void onCreate() {
         Log.d(getClass().getSimpleName(), "onCreate");
         handler = new Handler(Looper.getMainLooper());
+        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchTerm().getValue(), Constants.DEFAULT_MIN_RATING));
     }
 
     @Override
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
         refreshRepo();
+        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchTerm().getValue(), Constants.DEFAULT_MIN_RATING));
     }
 
     @Override
@@ -78,7 +96,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         final int ITRS_BEFORE_SEARCH = 5;
         while ((liveData.getValue() == null || liveData.getValue().size() == 0) && isLoading) {
             iterations++;
-            if(iterations >= ITRS_BEFORE_SEARCH){
+            if (iterations >= ITRS_BEFORE_SEARCH) {
                 refreshRepo();
             }
             try {
@@ -155,42 +173,16 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         return rv;
     }
 
-    private void loadImage(YelpData yd) {
-        //todo move to repo
-        Log.d(getClass().getSimpleName(), "loadImage()");
-        Request request = new Request.Builder()
-                .url(yd.getImageUrl())
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
-                Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
-                if (bmp != null) {
-                    yd.setBmp(bmp);
-                }
-            }
-        });
-    }
-
-    private void refreshRepo(){
-        String location = loadStringPref(context, Constants.PREF_LOCATION_KEY);
+    private void refreshRepo() {
+        String lat = loadStringPref(context, Constants.PREF_LAT_KEY);
+        String lng = loadStringPref(context, Constants.PREF_LNG_KEY);
         String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY);
-        repo.setLocation(location);
-        repo.setSearchTerm(searchTerm);
+        repo.setLocation(lat, lng);
+        handler.post(() -> {
+            repo.setSearchTerm(searchTerm);
+        });
         repo.search();
-        Log.d(getClass().getSimpleName(), String.format("Refreshing repo, location = %s, searchTerm = %s", location, searchTerm));
-    }
-
-    static String loadStringPref(Context context, String key) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        return prefs.getString(key, "");
+        Log.d(getClass().getSimpleName(), String.format("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm));
     }
 
     @Override

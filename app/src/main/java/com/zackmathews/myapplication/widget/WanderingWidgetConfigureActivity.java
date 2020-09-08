@@ -27,8 +27,8 @@ import android.widget.Toast;
 import com.zackmathews.myapplication.Constants;
 import com.zackmathews.myapplication.LocationUtils;
 import com.zackmathews.myapplication.R;
-import com.zackmathews.myapplication.ServiceLocator;
 import com.zackmathews.myapplication.TimelineRepo;
+import com.zackmathews.myapplication.WLPreferences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +38,16 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 
 import static com.zackmathews.myapplication.Constants.PREFS_NAME;
+import static com.zackmathews.myapplication.Constants.PREF_LAT_KEY;
+import static com.zackmathews.myapplication.Constants.PREF_LNG_KEY;
 import static com.zackmathews.myapplication.Constants.PREF_LOCATION_KEY;
 import static com.zackmathews.myapplication.Constants.PREF_PREFIX_KEY;
+import static com.zackmathews.myapplication.WLPreferences.saveStringPref;
 
 /**
  * The configuration screen for the {@link WanderingWidget WanderingWidget} AppWidget.
  */
 public class WanderingWidgetConfigureActivity extends Activity {
-    private LocationManager locationManager;
     TimelineRepo repo;
     HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
@@ -60,7 +62,9 @@ public class WanderingWidgetConfigureActivity extends Activity {
             String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
             locationText.setText(cityState);
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LOCATION_KEY, cityState);
-            Log.d(getClass().getSimpleName(), String.format("Storing location: %s", cityState));
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, String.valueOf(location.getLatitude()));
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, String.valueOf(location.getLongitude()));
+            Log.d(getClass().getSimpleName(), String.format("Storing location: %s, lat=%d, lng=%d", cityState, location.getLatitude(), location.getLongitude()));
         }
 
         @Override
@@ -122,13 +126,15 @@ public class WanderingWidgetConfigureActivity extends Activity {
             saveStringPref(context, Constants.PREF_CATEGORY_KEY, category);
 
             Log.d(getClass().getSimpleName(), String.format("Widget category = %s, location = %s", category, location));
-            // It is the responsibility of the configuration activity to update the app widget
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-            WanderingWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
-            if(repo == null) {
-                repo = new TimelineRepo(context);
+            // Try to use lat / lng if possible, fall back to city, state
+            String lat = WLPreferences.loadStringPref(context, PREF_LAT_KEY);
+            String lng = WLPreferences.loadStringPref(context, PREF_LNG_KEY);
+
+            if (lat == null || lng == null) {
+                repo.setLocation(location);
+            } else {
+                repo.setLocation(lat, lng);
             }
-            repo.setLocation(location);
             repo.setSearchTerm(category);
             repo.search();
             progressBar.setVisibility(View.VISIBLE);
@@ -140,47 +146,14 @@ public class WanderingWidgetConfigureActivity extends Activity {
                 finish();
             }, 2500);
             v.setEnabled(false);
+            // It is the responsibility of the configuration activity to update the app widget
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+            WanderingWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
         }
     };
 
     public WanderingWidgetConfigureActivity() {
         super();
-    }
-
-    static void saveStringPref(Context context, String key, String value) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.putString(key, value);
-        prefs.apply();
-    }
-
-    static String loadStringPref(Context context, String key) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        return prefs.getString(key, "");
-    }
-
-    // Write the prefix to the SharedPreferences object for this widget
-    static void saveTitlePref(Context context, int appWidgetId, String text) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.putString(PREF_PREFIX_KEY + appWidgetId, text);
-        prefs.apply();
-    }
-
-    // Read the prefix from the SharedPreferences object for this widget.
-    // If there is no preference saved, get the default from a resource
-    static String loadTitlePref(Context context, int appWidgetId) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null);
-        if (titleValue != null) {
-            return titleValue;
-        } else {
-            return context.getString(R.string.appwidget_text);
-        }
-    }
-
-    static void deleteTitlePref(Context context, int appWidgetId) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.remove(PREF_PREFIX_KEY + appWidgetId);
-        prefs.apply();
     }
 
     @Override
@@ -196,7 +169,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
         findViewById(R.id.add_button).setOnClickListener(mOnClickListener);
 
         locationText = findViewById(R.id.location_text);
-        locationText.setText(loadStringPref(this, PREF_LOCATION_KEY));
+        locationText.setText(WLPreferences.loadStringPref(this, PREF_LOCATION_KEY));
 
         customSearchText = findViewById(R.id.custom_search_text);
 
@@ -205,6 +178,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
         categoriesRadioGroup.setOnCheckedChangeListener(onCategoryChangedListener);
         useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
         progressBar = findViewById(R.id.progress_bar);
+        repo = new TimelineRepo(this);
         // Find the widget id from the intent.
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -216,10 +190,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
         // If this activity was started with an intent without an app widget ID, finish with an error.
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish();
-            return;
         }
-
-        mAppWidgetText.setText(loadTitlePref(WanderingWidgetConfigureActivity.this, mAppWidgetId));
     }
 
 
@@ -249,7 +220,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
     }
 
     private void storeLastKnownLocation() {
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
                 Log.d(getClass().getSimpleName(), "Requesting location permissions");
@@ -268,10 +239,19 @@ public class WanderingWidgetConfigureActivity extends Activity {
         if (cityState.length() == 0) {
             locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, handlerThread.getLooper());
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, handlerThread.getLooper());
-        }
-        else{
+        } else {
             locationText.setText(cityState);
+
+            // Try to use lat / lng if possible, fall back to city, state
+            String lat = String.valueOf(location.getLatitude());
+            String lng = String.valueOf(location.getLongitude());
+
+            repo.setLocation(lat, lng);
+
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LOCATION_KEY, cityState);
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, String.valueOf(location.getLatitude()));
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, String.valueOf(location.getLongitude()));
+            Log.d(getClass().getSimpleName(), String.format("Storing location: %s, lat=%f, lng=%f", cityState, location.getLatitude(), location.getLongitude()));
         }
     }
 }
