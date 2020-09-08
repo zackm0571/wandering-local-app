@@ -63,11 +63,8 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
             appWidgetManager.updateAppWidget(appWidgetId, views);
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
         }
-        if (ServiceLocator.getDb() == null) {
-            ServiceLocator.buildDb(context);
-        }
         if (repo == null) {
-            repo = ServiceLocator.getYelpRepo(context);
+            repo = new TimelineRepo(context);
         }
         repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
         repo.setSearchTerm(getStringPreference(Constants.PREF_CATEGORY_KEY));

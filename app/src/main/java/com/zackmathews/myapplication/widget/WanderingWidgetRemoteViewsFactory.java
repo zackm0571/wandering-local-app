@@ -49,7 +49,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
         Log.d(getClass().getSimpleName(), "constructor");
         this.context = applicationContext;
-        repo = ServiceLocator.getYelpRepo(applicationContext);
+        repo = new TimelineRepo(context);
         liveData = repo.getData();
     }
 

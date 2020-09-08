@@ -44,7 +44,6 @@ public class MainActivity extends ComponentActivity {
         initViewModel();
         initLocationServices();
         initUI();
-        ServiceLocator.buildDb(this);
     }
 
     @Override
@@ -64,6 +63,7 @@ public class MainActivity extends ComponentActivity {
 
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
+        viewModel.initializeRepo(this);
         viewModel.setSearchTerm(WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
         viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
             @Override

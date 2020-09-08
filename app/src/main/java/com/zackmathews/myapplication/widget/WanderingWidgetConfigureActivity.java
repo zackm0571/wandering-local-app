@@ -125,8 +125,9 @@ public class WanderingWidgetConfigureActivity extends Activity {
             // It is the responsibility of the configuration activity to update the app widget
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             WanderingWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
-
-            repo = ServiceLocator.getYelpRepo(context);
+            if(repo == null) {
+                repo = new TimelineRepo(context);
+            }
             repo.setLocation(location);
             repo.setSearchTerm(category);
             repo.search();

@@ -90,19 +90,17 @@ public class TimelineRepo {
     public TimelineRepo() {
         yelpApi = new YelpApi();
         db = ServiceLocator.getDb();
-        if (db != null) {
-            loadCached();
-        }
     }
 
     public TimelineRepo(Context context) {
         this.context = context;
         yelpApi = new YelpApi();
         if (ServiceLocator.getDb() == null) {
-            ServiceLocator.buildDb(context);
+            db = ServiceLocator.buildDb(context);
         }
-        db = ServiceLocator.getDb();
-        loadCached();
+        else {
+            db = ServiceLocator.getDb();
+        }
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {

@@ -1,5 +1,7 @@
 package com.zackmathews.myapplication;
 
+import android.content.Context;
+
 import java.util.List;
 
 import androidx.lifecycle.LiveData;
@@ -7,11 +9,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class MainViewModel extends ViewModel {
-    private TimelineRepo repo = new TimelineRepo();
-    private MutableLiveData<List<YelpData>> yelpData = repo.search();
+    private TimelineRepo repo;
+    private MutableLiveData<List<YelpData>> data;
+
+    public void initializeRepo(Context context) {
+        this.repo = new TimelineRepo(context);
+        this.data = repo.search();
+    }
 
     public LiveData<List<YelpData>> getYelpData() {
-        return yelpData;
+        return data;
     }
 
     public void setLocation(String location) {
@@ -25,10 +32,10 @@ public class MainViewModel extends ViewModel {
     }
 
     public void refresh() {
-        yelpData = repo.search();
+        data = repo.search();
     }
 
     public void getNextPage() {
-        yelpData = repo.searchWithOffset((yelpData.getValue() != null) ? yelpData.getValue().size() : 0);
+        data = repo.searchWithOffset((data.getValue() != null) ? data.getValue().size() : 0);
     }
 }
