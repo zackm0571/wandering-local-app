@@ -20,6 +20,8 @@
         android:layout_margin="16dp"
         android:backgroundTint="@color/colorAccent"
         android:contentDescription="@string/search"
+        app:rippleColor="@color/colorPrimary"
+        app:backgroundTint="@color/colorPrimary"
         android:src="@android:drawable/ic_menu_search" />
     <ProgressBar
         android:id="@+id/progressBar"
