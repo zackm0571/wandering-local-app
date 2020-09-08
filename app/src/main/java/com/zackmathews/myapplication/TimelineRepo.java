@@ -38,7 +38,7 @@ public class TimelineRepo {
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private WLDatabase db;
     private Context context;
-    private String searchTerm;
+    private MutableLiveData<String> searchTerm;
     private String location, lat, lng;
     private Listener listener;
     private OkHttpClient client = new OkHttpClient();
@@ -72,13 +72,16 @@ public class TimelineRepo {
         this.lng = lng;
     }
 
-    public String getSearchTerm() {
-        if (searchTerm == null) searchTerm = "";
+    public MutableLiveData<String> getSearchTerm() {
+        if (searchTerm == null){
+            searchTerm = new MutableLiveData<>();
+            searchTerm.setValue(Constants.DEFAULT_SEARCH_TERM);
+        }
         return searchTerm;
     }
 
     public void setSearchTerm(String searchTerm) {
-        this.searchTerm = searchTerm;
+        this.searchTerm.setValue(searchTerm);
     }
 
     public interface Listener {
@@ -119,7 +122,7 @@ public class TimelineRepo {
                     data.setImageUrl(b.getImageUrl());
                     data.setYelpUrl(b.getUrl());
                     data.setRating(b.getRating());
-                    data.setSearchTerm(getSearchTerm());
+                    data.setSearchTerm(getSearchTerm().getValue());
                     data.setLocation(b.getLocation());
                     results.add(data);
                 }
@@ -137,7 +140,7 @@ public class TimelineRepo {
                 Log.e(getClass().getSimpleName(), call.request().toString());
                 AsyncTask.execute(() -> {
                     if (db != null) {
-                        List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
+                        List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm().getValue(), MIN_RATING);
                         if (cached.size() > 0) {
                             Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                             data.postValue(cached);
@@ -150,11 +153,11 @@ public class TimelineRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm().getValue()));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm().getValue()));
     }
 
     private void persist(List<YelpData> entries) {
@@ -170,7 +173,7 @@ public class TimelineRepo {
     private void loadCached() {
         Log.d(getClass().getSimpleName(), "loadCached");
         AsyncTask.execute(() -> {
-            List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm(), MIN_RATING);
+            List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm().getValue(), MIN_RATING);
             if (cached != null && cached.size() > 0 && (data.getValue() == null || data.getValue().size() == 0)) {
                 handler.post(() -> {
                     Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));

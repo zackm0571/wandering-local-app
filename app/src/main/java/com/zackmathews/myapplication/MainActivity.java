@@ -72,6 +72,9 @@ public class MainActivity extends ComponentActivity {
                 progressBar.setVisibility(View.GONE);
             }
         });
+        viewModel.getSearchTerm().observe(this, s -> {
+            setTitle(getString(R.string.app_name) + " - " + s);
+        });
     }
 
     private void initLocationServices() {

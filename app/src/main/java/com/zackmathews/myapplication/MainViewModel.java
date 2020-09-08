@@ -24,11 +24,17 @@ public class MainViewModel extends ViewModel {
     public void setLocation(String location) {
         repo.setLocation(location);
     }
+
     public void setLocation(String lat, String lng) {
         repo.setLocation(lat, lng);
     }
+
     public void setSearchTerm(String searchTerm) {
         repo.setSearchTerm(searchTerm);
+    }
+
+    public MutableLiveData<String> getSearchTerm() {
+        return repo.getSearchTerm();
     }
 
     public void refresh() {
