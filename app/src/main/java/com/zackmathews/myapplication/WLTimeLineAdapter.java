@@ -63,7 +63,16 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
     @Override
     public void onBindViewHolder(@NonNull YelpBusiness holder, int position) {
         final YelpData yelpData = data.get(position);
-        holder.textView.setText(yelpData.getBusinessName());
+        holder.businessNameTextView.setText(yelpData.getBusinessName());
+        holder.businessAddressTextView.setText(yelpData.getLocationString());
+        holder.businessAddressTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + yelpData.getLocationString()));
+                Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
+                context.startActivity(intent);
+            }
+        });
         holder.imgView.setImageBitmap(yelpData.getBmp());
 
         ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
@@ -90,13 +99,15 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
     class YelpBusiness extends RecyclerView.ViewHolder {
         RatingBar ratingBar;
         ImageView imgView;
-        TextView textView;
+        TextView businessNameTextView;
+        TextView businessAddressTextView;
 
         public YelpBusiness(@NonNull View itemView) {
             super(itemView);
             this.imgView = itemView.findViewById(R.id.businessImg);
-            this.textView = itemView.findViewById(R.id.businessName);
+            this.businessNameTextView = itemView.findViewById(R.id.businessName);
             this.ratingBar = itemView.findViewById(R.id.businessRatingBar);
+            this.businessAddressTextView = itemView.findViewById(R.id.businessAddress);
         }
     }
 }

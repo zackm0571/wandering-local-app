@@ -2,6 +2,9 @@ package com.zackmathews.myapplication;
 
 import android.graphics.Bitmap;
 
+import com.yelp.fusion.client.models.Business;
+import com.yelp.fusion.client.models.Location;
+
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -21,9 +24,6 @@ import androidx.room.Update;
  */
 @Entity(tableName = "yelpData")
 public class YelpData {
-    public YelpData() {
-    }
-
     @Dao
     public interface YelpDAO {
         @Query("SELECT * FROM yelpdata LIMIT 10")
@@ -42,68 +42,71 @@ public class YelpData {
         void deleteEntries();
     }
 
+    @Ignore
+    private Bitmap bmp;
     public Bitmap getBmp() {
         return bmp;
     }
-
     public void setBmp(Bitmap bmp) {
         this.bmp = bmp;
     }
 
+    @PrimaryKey
+    @NonNull
+    private String businessName = "";
     public String getBusinessName() {
         return businessName;
     }
-
     public void setBusinessName(String businessName) {
         this.businessName = businessName;
     }
 
-    @Ignore
-    private Bitmap bmp;
-
+    @ColumnInfo(name = "image_url")
+    private String imageUrl;
     public String getImageUrl() {
         return imageUrl;
     }
-
-    @ColumnInfo(name = "image_url")
-    private String imageUrl;
-    @PrimaryKey
-    @NonNull
-    private String businessName = "";
-
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
     @ColumnInfo(name = "yelp_url")
     private String yelpUrl;
-
     public void setYelpUrl(String url) {
         this.yelpUrl = url;
     }
-
     public String getYelpUrl() {
         return yelpUrl;
     }
 
     @ColumnInfo(name = "rating")
     private double rating;
-
     public double getRating() {
         return rating;
     }
-
     public void setRating(double rating) {
         this.rating = rating;
     }
+
     @ColumnInfo(name = "searchTerm")
     private String searchTerm;
     public String getSearchTerm() {
         return searchTerm;
     }
-
     public void setSearchTerm(String searchTerm) {
         this.searchTerm = searchTerm;
     }
 
+    @Ignore
+    private Location location;
+    public Location getLocation() {
+        return location;
+    }
+    public String getLocationString(){
+        if(location == null) return "";
+        return String.format("%s\n%s, %s %s", location.getAddress1(), location.getCity(), location.getState(), location.getZipCode());
+    }
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 }

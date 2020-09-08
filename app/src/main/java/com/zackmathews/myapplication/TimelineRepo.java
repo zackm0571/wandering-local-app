@@ -120,6 +120,7 @@ public class TimelineRepo {
                     data.setYelpUrl(b.getUrl());
                     data.setRating(b.getRating());
                     data.setSearchTerm(getSearchTerm());
+                    data.setLocation(b.getLocation());
                     results.add(data);
                 }
                 Log.d(getClass().getSimpleName(), String.format("Yelp search has returned %d results", results.size()));
