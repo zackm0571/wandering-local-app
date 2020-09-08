@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ProgressBar;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -31,6 +32,7 @@ public class MainActivity extends ComponentActivity {
     private static final int REQUEST_CODE = 71;
 
     private View searchView;
+    private ProgressBar progressBar;
     private AlertDialog searchDialog;
     private WLTimeLineAdapter yelpAdapter;
     private MainViewModel viewModel;
@@ -67,6 +69,7 @@ public class MainActivity extends ComponentActivity {
             @Override
             public void onChanged(List<YelpData> yelpData) {
                 yelpAdapter.setData(yelpData);
+                progressBar.setVisibility(View.GONE);
             }
         });
     }
@@ -89,8 +92,11 @@ public class MainActivity extends ComponentActivity {
         }
     }
 
-    void initUI() {
+    private void initUI() {
         Log.d(getClass().getSimpleName(), "Initializing UI...");
+        Log.d(getClass().getSimpleName(), "Initializing ProgressBar...");
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
         Log.d(getClass().getSimpleName(), "Initializing FloatingActionBar...");
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
@@ -141,7 +147,9 @@ public class MainActivity extends ComponentActivity {
         if (searchView == null) {
             searchView = LayoutInflater.from(this).inflate(R.layout.search_layout, null);
             searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
+                progressBar.setVisibility(View.VISIBLE);
                 String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
+                Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
                 viewModel.setSearchTerm(checkedCategory);
                 viewModel.refresh();
                 //todo, add progress bar progressBar.setVisibility(View.VISIBLE);
