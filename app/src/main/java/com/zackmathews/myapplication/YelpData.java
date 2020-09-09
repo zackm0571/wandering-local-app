@@ -109,4 +109,14 @@ public class YelpData {
     public void setLocation(Location location) {
         this.location = location;
     }
+
+    @ColumnInfo(name = "distance")
+    private double distance;
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+    public double getDistance() {
+        return distance;
+    }
+
 }

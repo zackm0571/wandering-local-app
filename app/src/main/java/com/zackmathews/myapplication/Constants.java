@@ -14,6 +14,7 @@ public class Constants {
     public static final double DEFAULT_MIN_RATING = 4.0;
 
     public static final String[] PERMISSIONS = new String[]{Manifest.permission_group.LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
+    //todo: add category repo
     public static final String[] DEFAULT_SEARCH_CATEGORIES = new String[]{"American", "Burmese", "Chinese", "Coffee", "Dessert", "Ethiopian", "Indian", "Mexican", "Ramen", "Sushi"};
     public static final int PERMISSION_REQUEST_CODE = 71;
 }
