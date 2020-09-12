@@ -1,3 +1,9 @@
-# yelp-mvvm-demo
+# WanderingLocal
 
-Brushing up on MVVM and some new Android frameworks by having some fun with food and yelp! Eventually this will hook into my new travel blog to display my reccomendations by city.
+WanderingLocal allows travelers to find the best coffee and cuisine no matter where they are. My goal is to create a production quality app that hooks into my new travel blog to display my personal reccomendations by city. 
+
+- MVVM
+_ LiveData
+- Retrofit
+- OkHttp
+- Material Design
