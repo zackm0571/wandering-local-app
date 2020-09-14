@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication.widget;
+package life.wanderinglocal.widget;
 
 import android.content.Intent;
 import android.widget.RemoteViewsService;

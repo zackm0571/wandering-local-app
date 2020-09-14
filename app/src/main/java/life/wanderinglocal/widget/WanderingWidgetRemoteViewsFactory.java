@@ -1,10 +1,8 @@
-package com.zackmathews.myapplication.widget;
+package life.wanderinglocal.widget;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -18,14 +16,6 @@ import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
-import com.zackmathews.myapplication.Constants;
-import com.zackmathews.myapplication.IOUtils;
-import com.zackmathews.myapplication.R;
-import com.zackmathews.myapplication.ServiceLocator;
-import com.zackmathews.myapplication.WLDatabase;
-import com.zackmathews.myapplication.WLPreferences;
-import com.zackmathews.myapplication.YelpData;
-import com.zackmathews.myapplication.TimelineRepo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +25,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MutableLiveData;
+import life.wanderinglocal.Constants;
+import life.wanderinglocal.IOUtils;
+import life.wanderinglocal.R;
+import life.wanderinglocal.ServiceLocator;
+import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLDatabase;
+import life.wanderinglocal.YelpData;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -42,8 +39,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static android.content.Context.LOCATION_SERVICE;
-import static com.zackmathews.myapplication.Constants.PREFS_NAME;
-import static com.zackmathews.myapplication.WLPreferences.loadStringPref;
+import static life.wanderinglocal.Constants.PREFS_NAME;
+import static life.wanderinglocal.WLPreferences.loadStringPref;
 
 /**
  * Adapter for widget ListView. Loads data from room db.

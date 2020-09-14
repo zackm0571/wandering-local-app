@@ -1,11 +1,10 @@
-package com.zackmathews.myapplication.widget;
+package life.wanderinglocal.widget;
 
 import android.Manifest;
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -24,25 +23,22 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import com.zackmathews.myapplication.Constants;
-import com.zackmathews.myapplication.LocationUtils;
-import com.zackmathews.myapplication.R;
-import com.zackmathews.myapplication.TimelineRepo;
-import com.zackmathews.myapplication.WLPreferences;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import life.wanderinglocal.Constants;
+import life.wanderinglocal.LocationUtils;
+import life.wanderinglocal.R;
+import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLPreferences;
 
-import static com.zackmathews.myapplication.Constants.PREFS_NAME;
-import static com.zackmathews.myapplication.Constants.PREF_LAT_KEY;
-import static com.zackmathews.myapplication.Constants.PREF_LNG_KEY;
-import static com.zackmathews.myapplication.Constants.PREF_LOCATION_KEY;
-import static com.zackmathews.myapplication.Constants.PREF_PREFIX_KEY;
-import static com.zackmathews.myapplication.WLPreferences.saveStringPref;
+import static life.wanderinglocal.Constants.PREF_LAT_KEY;
+import static life.wanderinglocal.Constants.PREF_LNG_KEY;
+import static life.wanderinglocal.Constants.PREF_LOCATION_KEY;
+import static life.wanderinglocal.WLPreferences.saveStringPref;
 
 /**
  * The configuration screen for the {@link WanderingWidget WanderingWidget} AppWidget.

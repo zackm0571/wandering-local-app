@@ -1,9 +1,10 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import static com.zackmathews.myapplication.Constants.PREFS_NAME;
+import static life.wanderinglocal.Constants.PREFS_NAME;
+
 
 public class WLPreferences {
     public static void saveStringPref(Context context, String key, String value) {

@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;

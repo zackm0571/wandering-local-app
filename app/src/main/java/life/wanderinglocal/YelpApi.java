@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import com.yelp.fusion.client.connection.YelpFusionApi;
 import com.yelp.fusion.client.connection.YelpFusionApiFactory;

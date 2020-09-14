@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication.widget;
+package life.wanderinglocal.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -12,12 +12,10 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.zackmathews.myapplication.Constants;
-import com.zackmathews.myapplication.R;
-import com.zackmathews.myapplication.ServiceLocator;
-import com.zackmathews.myapplication.TimelineRepo;
-import com.zackmathews.myapplication.WLPreferences;
-
+import life.wanderinglocal.Constants;
+import life.wanderinglocal.R;
+import life.wanderinglocal.ServiceLocator;
+import life.wanderinglocal.TimelineRepo;
 
 /**
  * Implementation of App Widget functionality.

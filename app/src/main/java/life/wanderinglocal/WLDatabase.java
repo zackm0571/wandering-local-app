@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;

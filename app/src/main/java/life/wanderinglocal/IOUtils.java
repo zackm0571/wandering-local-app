@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
