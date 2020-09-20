@@ -37,6 +37,7 @@ public class YelpApi {
         public static final String PARAM_LONGITUDE = "longitude";
         public static final String PARAM_SORT_BY = "sort_by";
         private static final String SORT_RATING = "rating";
+        private static final String SORT_DISTANCE = "distance";
         Map<String, String> map = new HashMap<>();
 
         public SearchBuilder setTerm(String term) {
