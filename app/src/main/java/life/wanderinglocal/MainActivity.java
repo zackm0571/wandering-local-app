@@ -158,7 +158,6 @@ public class MainActivity extends ComponentActivity {
                 WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
                 viewModel.setSearchTerm(checkedCategory);
                 viewModel.refresh();
-                //todo, add progress bar progressBar.setVisibility(View.VISIBLE);
                 getSearchDialog().dismiss();
             });
         }
