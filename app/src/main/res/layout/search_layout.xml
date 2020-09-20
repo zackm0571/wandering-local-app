@@ -3,26 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/search"
         android:textSize="24sp"
-        android:layout_margin="10dp"/>
+        android:layout_marginStart="20dp" />
     <ScrollView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/categoryChipGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:singleSelection="true"/>
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/categoryChipGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            app:singleSelection="true"/>
     </ScrollView>
     <Button
         style="@android:style/Widget.Material.Button"
         android:id="@+id/searchButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/search"
         android:layout_gravity="center"

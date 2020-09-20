@@ -43,7 +43,7 @@
             android:layout_margin="5dp"
             android:textColor="@android:color/holo_blue_dark"
             android:hint="@string/business_address"
-            android:textSize="18sp" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 

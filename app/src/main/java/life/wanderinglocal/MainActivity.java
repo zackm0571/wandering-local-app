@@ -64,7 +64,7 @@ public class MainActivity extends ComponentActivity {
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
         viewModel.initializeRepo(this);
-        viewModel.setSearchTerm(WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
+        viewModel.setSearchTerm(WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
         viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
             @Override
             public void onChanged(List<YelpData> yelpData) {
@@ -79,7 +79,6 @@ public class MainActivity extends ComponentActivity {
 
     private void initLocationServices() {
         Log.d(getClass().getSimpleName(), "Initializing location services...");
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
@@ -88,6 +87,7 @@ public class MainActivity extends ComponentActivity {
                 return;
             }
         }
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null) {
             viewModel.setLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
@@ -150,9 +150,12 @@ public class MainActivity extends ComponentActivity {
         if (searchView == null) {
             searchView = LayoutInflater.from(this).inflate(R.layout.search_layout, null);
             searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
-                progressBar.setVisibility(View.VISIBLE);
                 String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
+                if(checkedCategory == null || checkedCategory.length() == 0) return;
+                progressBar.setVisibility(View.VISIBLE);
                 Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
+
+                WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
                 viewModel.setSearchTerm(checkedCategory);
                 viewModel.refresh();
                 //todo, add progress bar progressBar.setVisibility(View.VISIBLE);
