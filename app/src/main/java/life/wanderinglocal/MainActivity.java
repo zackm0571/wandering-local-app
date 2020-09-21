@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.widget.ProgressBar;
 
 import com.google.android.material.chip.Chip;
@@ -145,6 +146,7 @@ public class MainActivity extends ComponentActivity {
     private AlertDialog getSearchDialog() {
         if (searchDialog == null) {
             searchDialog = new AlertDialog.Builder(this).setView(getSearchView()).create();
+            searchDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         }
         return searchDialog;
     }
