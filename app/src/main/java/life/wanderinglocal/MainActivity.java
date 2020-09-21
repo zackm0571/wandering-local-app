@@ -47,6 +47,14 @@ public class MainActivity extends ComponentActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if(getSearchDialog().isShowing()){
+            getSearchDialog().dismiss();
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
