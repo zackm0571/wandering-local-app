@@ -1,21 +1,16 @@
 package life.wanderinglocal.widget;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
-
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,8 +33,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static android.content.Context.LOCATION_SERVICE;
-import static life.wanderinglocal.Constants.PREFS_NAME;
 import static life.wanderinglocal.WLPreferences.loadStringPref;
 
 /**
