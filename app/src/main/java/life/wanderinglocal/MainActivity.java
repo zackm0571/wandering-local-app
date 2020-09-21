@@ -50,7 +50,7 @@ public class MainActivity extends ComponentActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(getSearchDialog().isShowing()){
+        if (getSearchDialog().isShowing()) {
             getSearchDialog().dismiss();
         }
     }
@@ -129,11 +129,30 @@ public class MainActivity extends ComponentActivity {
 
         Log.d(getClass().getSimpleName(), "Initializing search view...");
         ChipGroup cg = getSearchView().findViewById(R.id.categoryChipGroup);
-
+        cg.setOnCheckedChangeListener(new ChipGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(ChipGroup group, int checkedId) {
+                group.setOnCheckedChangeListener(null);
+                for (int i = 0; i < cg.getChildCount(); i++) {
+                    View v = cg.getChildAt(i);
+                    if (v instanceof Chip) {
+                        Chip c = (Chip) v;
+                        if (c.getId() != checkedId) {
+                            c.setChecked(false);
+                        }
+                    }
+                }
+                group.setOnCheckedChangeListener(this);
+            }
+        });
+        String lastSearch = WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM);
         for (String s : Constants.DEFAULT_SEARCH_CATEGORIES) {
             Chip c = new Chip(this);
             c.setText(s);
             c.setCheckable(true);
+            if (s.equals(lastSearch)) {
+                c.setChecked(true);
+            }
             cg.addView(c);
         }
     }
@@ -161,7 +180,7 @@ public class MainActivity extends ComponentActivity {
             searchView = LayoutInflater.from(this).inflate(R.layout.search_layout, null);
             searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
                 String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
-                if(checkedCategory == null || checkedCategory.length() == 0) return;
+                if (checkedCategory == null || checkedCategory.length() == 0) return;
                 progressBar.setVisibility(View.VISIBLE);
                 Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
 

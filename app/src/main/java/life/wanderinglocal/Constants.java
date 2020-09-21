@@ -3,7 +3,7 @@ package life.wanderinglocal;
 import android.Manifest;
 
 public class Constants {
-    public static final String PREFS_NAME = "com.zackmathews.myapplication.widget.WanderingWidget";
+    public static final String PREFS_NAME = "life.wanderinglocal.widget.WanderingWidget";
     public static final String PREF_PREFIX_KEY = "appwidget_";
     public static final String PREF_LOCATION_KEY = "location_";
     public static final String PREF_LAT_KEY = "location_lat_";
