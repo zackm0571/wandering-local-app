@@ -1,4 +1,4 @@
-package com.zackmathews.myapplication;
+package life.wanderinglocal;
 
 import org.junit.Test;
 
