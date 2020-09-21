@@ -34,6 +34,10 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wandering_widget);
         Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
         views.setRemoteAdapter(R.id.widgetList, intent);
+        // Refresh data when button clicked
+        Intent refreshIntent = new Intent(context, WanderingWidget.class);
+        refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+        views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context.getApplicationContext(), 0, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT));
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
         appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
@@ -54,10 +58,10 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
             Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
             views.setRemoteAdapter(R.id.widgetList, intent);
             // Refresh data when button clicked
-            Intent refreshIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-            intent.setComponent(new ComponentName(context, WanderingWidget.class));
-            intent.setComponent(new ComponentName(context, WanderingWidgetRemoteViewsFactory.class));
-            views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context, 0, refreshIntent, 0));
+            // Refresh data when button clicked
+            Intent refreshIntent = new Intent(context, WanderingWidget.class);
+            refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+            views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context.getApplicationContext(), 0, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT));
             // Update the widget / adapter
             appWidgetManager.updateAppWidget(appWidgetId, views);
             appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
@@ -74,6 +78,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         // When the user deletes the widget, delete the preference associated with it.
+        WanderingWidget.appWidgetIds = appWidgetIds;
         this.context = context;
     }
 
@@ -102,7 +107,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onReceive(Context context, Intent intent) {
         this.context = context;
         final String action = intent.getAction();
-        if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)) {
+        if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE) || action.equals(Constants.WL_ACTION_WIDGET_CLICK)) {
             if (ServiceLocator.getDb() == null) {
                 ServiceLocator.buildDb(context);
             }

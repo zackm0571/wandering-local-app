@@ -2,7 +2,6 @@ package life.wanderinglocal;
 
 import android.graphics.Bitmap;
 
-import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.Location;
 
 import java.util.List;

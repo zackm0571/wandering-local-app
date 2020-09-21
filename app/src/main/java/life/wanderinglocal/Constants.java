@@ -11,6 +11,7 @@ public class Constants {
     public static final String PREF_CATEGORY_KEY = "category_";
     public static final String PREF_LAST_SEARCHED_CATEGORY_KEY = "last_category_";
     public static final String DEFAULT_SEARCH_TERM = "Coffee";
+    public static final String WL_ACTION_WIDGET_CLICK = "life.wanderinglocal.WIDGET_CLICK";
 
     public static final double DEFAULT_MIN_RATING = 4.0;
 

@@ -35,6 +35,7 @@
         <receiver android:name=".widget.WanderingWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="life.wanderinglocal.WIDGET_CLICK" />
             </intent-filter>
 
             <meta-data
