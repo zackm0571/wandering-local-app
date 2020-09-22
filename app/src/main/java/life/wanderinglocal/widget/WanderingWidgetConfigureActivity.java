@@ -140,12 +140,16 @@ public class WanderingWidgetConfigureActivity extends Activity {
                 Intent resultValue = new Intent();
                 resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
                 setResult(RESULT_OK, resultValue);
+
+                // Refresh the widget
+                Intent refreshIntent = new Intent(context, WanderingWidget.class);
+                refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+                refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                sendBroadcast(refreshIntent);
+
                 finish();
-            }, 2500);
+            }, 1000);
             v.setEnabled(false);
-            // It is the responsibility of the configuration activity to update the app widget
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-            WanderingWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
         }
     };
 

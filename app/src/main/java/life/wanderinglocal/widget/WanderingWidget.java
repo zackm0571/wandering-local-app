@@ -29,44 +29,39 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     private Handler handler = new Handler();
     private Context context;
 
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId) {
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wandering_widget);
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        WanderingWidget.appWidgetIds = appWidgetIds;
+        this.context = context;
+        // There may be multiple widgets active, so update all of them
+        Log.d(getClass().getSimpleName(), "onUpdate()");
+
+        for (int appWidgetId : appWidgetIds) {
+            RemoteViews views = new RemoteViews(
+                    context.getPackageName(),
+                    R.layout.wandering_widget);
+            bindWidget(appWidgetManager, views, appWidgetId);
+
+        }
+    }
+
+    private void bindWidget(AppWidgetManager appWidgetManager, RemoteViews views, int appWidgetId) {
+        Log.d(getClass().getSimpleName(), "bindWidget()");
+        // Set list adapter
         Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
         views.setRemoteAdapter(R.id.widgetList, intent);
         // Refresh data when button clicked
         Intent refreshIntent = new Intent(context, WanderingWidget.class);
         refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
         views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context.getApplicationContext(), 0, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT));
-        // Instruct the widget manager to update the widget
+        // Open settings activity
+        Intent configurationIntent = new Intent(context, WanderingWidgetConfigureActivity.class);
+        configurationIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        views.setOnClickPendingIntent(R.id.settingsButton, PendingIntent.getActivity(context, 0, configurationIntent, 0));
+        // Update the widget / adapter
         appWidgetManager.updateAppWidget(appWidgetId, views);
         appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
-    }
 
-    @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        WanderingWidget.appWidgetIds = appWidgetIds;
-        this.context = context;
-        // There may be multiple widgets active, so update all of them
-        Log.d(getClass().getSimpleName(), "onUpdate widget");
-
-        for (int appWidgetId : appWidgetIds) {
-            RemoteViews views = new RemoteViews(
-                    context.getPackageName(),
-                    R.layout.wandering_widget);
-            // Set list adapter
-            Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
-            views.setRemoteAdapter(R.id.widgetList, intent);
-            // Refresh data when button clicked
-            // Refresh data when button clicked
-            Intent refreshIntent = new Intent(context, WanderingWidget.class);
-            refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
-            views.setOnClickPendingIntent(R.id.refreshButton, PendingIntent.getBroadcast(context.getApplicationContext(), 0, refreshIntent, PendingIntent.FLAG_UPDATE_CURRENT));
-            // Update the widget / adapter
-            appWidgetManager.updateAppWidget(appWidgetId, views);
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
-        }
         if (repo == null) {
             repo = new TimelineRepo(context);
         }
@@ -108,17 +103,28 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onReceive(Context context, Intent intent) {
         this.context = context;
         final String action = intent.getAction();
-        if (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE) || action.equals(Constants.WL_ACTION_WIDGET_CLICK)) {
+        if (action != null
+                && (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                || action.equals(Constants.WL_ACTION_WIDGET_CLICK))) {
             if (ServiceLocator.getDb() == null) {
                 ServiceLocator.buildDb(context);
             }
             if (repo == null) {
                 repo = new TimelineRepo(context);
             }
+            repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
+            repo.setSearchBy(getStringPreference(Constants.PREF_CATEGORY_KEY));
             repo.setListener(this);
-            AppWidgetManager manager = AppWidgetManager.getInstance(context);
-            ComponentName componentName = new ComponentName(context, WanderingWidget.class);
-            manager.notifyAppWidgetViewDataChanged(manager.getAppWidgetIds(componentName), R.id.widgetList);
+            // Update all widgets, note: multiple widgets not tested yet.
+            if(appWidgetIds != null) {
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+                for (int appWidgetId : appWidgetIds) {
+                    RemoteViews views = new RemoteViews(
+                            context.getPackageName(),
+                            R.layout.wandering_widget);
+                    bindWidget(appWidgetManager, views, appWidgetId);
+                }
+            }
         }
         super.onReceive(context, intent);
     }

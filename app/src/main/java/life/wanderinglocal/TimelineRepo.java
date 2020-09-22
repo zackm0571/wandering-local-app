@@ -124,7 +124,7 @@ public class TimelineRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().toString()));
+        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().getValue().toString()));
         if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
             return data;
         yelpApi.search(new Callback<SearchResponse>() {

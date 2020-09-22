@@ -169,12 +169,12 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         String lat = loadStringPref(context, Constants.PREF_LAT_KEY);
         String lng = loadStringPref(context, Constants.PREF_LNG_KEY);
         String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY);
-        repo.setLocation(lat, lng);
         handler.post(() -> {
+            repo.setLocation(lat, lng);
             repo.setSearchBy(new WLCategory(searchTerm));
+            repo.search();
+            Log.d(getClass().getSimpleName(), String.format("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm));
         });
-        repo.search();
-        Log.d(getClass().getSimpleName(), String.format("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm));
     }
 
     @Override
