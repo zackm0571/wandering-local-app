@@ -20,11 +20,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MutableLiveData;
+
 import life.wanderinglocal.Constants;
 import life.wanderinglocal.IOUtils;
 import life.wanderinglocal.R;
 import life.wanderinglocal.ServiceLocator;
 import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLDatabase;
 import life.wanderinglocal.YelpData;
 import okhttp3.Call;
@@ -63,14 +65,14 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     public void onCreate() {
         Log.d(getClass().getSimpleName(), "onCreate");
         handler = new Handler(Looper.getMainLooper());
-        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchTerm().getValue(), Constants.DEFAULT_MIN_RATING));
+        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING));
     }
 
     @Override
     public void onDataSetChanged() {
         Log.d(getClass().getSimpleName(), "onDataSetChanged");
         refreshRepo();
-        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchTerm().getValue(), Constants.DEFAULT_MIN_RATING));
+        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING));
     }
 
     @Override
@@ -169,7 +171,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY);
         repo.setLocation(lat, lng);
         handler.post(() -> {
-            repo.setSearchTerm(searchTerm);
+            repo.setSearchBy(new WLCategory(searchTerm));
         });
         repo.search();
         Log.d(getClass().getSimpleName(), String.format("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm));

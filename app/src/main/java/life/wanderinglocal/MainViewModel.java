@@ -10,10 +10,12 @@ import androidx.lifecycle.ViewModel;
 
 public class MainViewModel extends ViewModel {
     private TimelineRepo repo;
+    private CategoryRepo categoryRepo;
     private MutableLiveData<List<YelpData>> data;
 
     public void initializeRepo(Context context) {
         this.repo = new TimelineRepo(context);
+        this.categoryRepo = new CategoryRepo();
         this.data = repo.search();
     }
 
@@ -29,12 +31,27 @@ public class MainViewModel extends ViewModel {
         repo.setLocation(lat, lng);
     }
 
-    public void setSearchTerm(String searchTerm) {
-        repo.setSearchTerm(searchTerm);
+    /**
+     * Sets the search parameters of {@link TimelineRepo}.
+     * When //todo add refined search features
+     * are implemented, this function may be overridden or {@link WLCategory}
+     * may contain a builder. Maybe a SearchQuery and SearchQuery.Builder?
+     *
+     * @param category {@link WLCategory} containing the search string {@link WLCategory} containing the search string
+     */
+    public void setSearchingBy(WLCategory category) {
+        repo.setSearchBy(category);
+    }
+    public void setSearchingBy(String s){
+        repo.setSearchBy(new WLCategory(s));
     }
 
-    public MutableLiveData<String> getSearchTerm() {
-        return repo.getSearchTerm();
+    public MutableLiveData<WLCategory> getSearchingBy() {
+        return repo.getSearchingBy();
+    }
+
+    public MutableLiveData<List<WLCategory>> getCategories() {
+        return categoryRepo.getCategories();
     }
 
     public void refresh() {

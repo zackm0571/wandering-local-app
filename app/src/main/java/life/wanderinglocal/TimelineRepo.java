@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -34,12 +35,12 @@ public class TimelineRepo {
         }
         return data;
     }
+    private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
+    private MutableLiveData<WLCategory> searchingBy = new MutableLiveData<>(); // Store filtration options in WLCategory?
 
     private Handler handler = new Handler(Looper.getMainLooper());
-    private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private WLDatabase db;
     private Context context;
-    private MutableLiveData<String> searchTerm;
     private String location, lat, lng;
     private Listener listener;
     private OkHttpClient client = new OkHttpClient();
@@ -73,21 +74,32 @@ public class TimelineRepo {
         this.lng = lng;
     }
 
-    public MutableLiveData<String> getSearchTerm() {
-        if (searchTerm == null) {
-            searchTerm = new MutableLiveData<>();
-            searchTerm.setValue(Constants.DEFAULT_SEARCH_TERM);
+    /**
+     * @return the {@link WLCategory} that's currently being used to search.
+     */
+    @NonNull
+    public MutableLiveData<WLCategory> getSearchingBy() {
+        if(searchingBy.getValue() == null) {
+            searchingBy.setValue(CategoryRepo.DEFAULT_SEARCH_CATEGORY);
         }
-        return searchTerm;
+        return searchingBy;
     }
 
-    public void setSearchTerm(String searchTerm) {
-        getSearchTerm().setValue(searchTerm);
+    /**
+     * Sets the {@link WLCategory} used for searching / populating the timeline.
+     * @param category
+     */
+    public void setSearchBy(@NonNull WLCategory category) {
+        searchingBy.setValue(category);
     }
 
+    public void setSearchBy(String s){
+        searchingBy.setValue(new WLCategory(s));
+    }
+
+    @Deprecated
     public interface Listener {
         void onDataLoaded();
-
         void onDataPersisted();
     }
 
@@ -108,8 +120,8 @@ public class TimelineRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchTerm().getValue()));
-        if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0 || getSearchTerm().getValue() == null)
+        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().toString()));
+        if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
             return data;
         yelpApi.search(new Callback<SearchResponse>() {
             @Override
@@ -123,7 +135,7 @@ public class TimelineRepo {
                     data.setImageUrl(b.getImageUrl());
                     data.setYelpUrl(b.getUrl());
                     data.setRating(b.getRating());
-                    data.setSearchTerm(getSearchTerm().getValue());
+                    data.setSearchTerm(getSearchingBy().getValue().getName()); //todo update db to include serialized WLCategory
                     data.setLocation(b.getLocation());
                     data.setDistance(b.getDistance());
                     results.add(data);
@@ -142,7 +154,7 @@ public class TimelineRepo {
                 Log.e(getClass().getSimpleName(), call.request().toString());
                 AsyncTask.execute(() -> {
                     if (db != null) {
-                        List<YelpData> cached = db.dao().getDataWithParams(getSearchTerm().getValue(), MIN_RATING);
+                        List<YelpData> cached = db.dao().getDataWithParams(getSearchingBy().getValue().getName(), MIN_RATING);
                         if (cached.size() > 0) {
                             Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                             data.postValue(cached);
@@ -155,11 +167,11 @@ public class TimelineRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm().getValue()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchTerm().getValue()));
+        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
     private void persist(List<YelpData> entries) {
@@ -174,7 +186,7 @@ public class TimelineRepo {
 
     private void loadCached() {
         Log.d(getClass().getSimpleName(), "loadCached");
-        final String searchTerm = getSearchTerm().getValue();
+        final String searchTerm = getSearchingBy().getValue().getName();
         AsyncTask.execute(() -> {
             List<YelpData> cached = db.dao().getDataWithParams(searchTerm, MIN_RATING);
             if (cached != null && cached.size() > 0 && (data.getValue() == null || data.getValue().size() == 0)) {

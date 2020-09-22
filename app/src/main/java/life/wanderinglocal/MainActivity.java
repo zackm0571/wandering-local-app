@@ -29,7 +29,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.List;
 
 public class MainActivity extends ComponentActivity {
-    private static final int SCROLL_THRESHOLD = 250;
     private static final int REQUEST_CODE = 71;
 
     private View searchView;
@@ -73,7 +72,7 @@ public class MainActivity extends ComponentActivity {
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
         viewModel.initializeRepo(this);
-        viewModel.setSearchTerm(WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
+        viewModel.setSearchingBy(WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
         viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
             @Override
             public void onChanged(List<YelpData> yelpData) {
@@ -81,9 +80,11 @@ public class MainActivity extends ComponentActivity {
                 progressBar.setVisibility(View.GONE);
             }
         });
-        viewModel.getSearchTerm().observe(this, s -> {
-            setTitle(getString(R.string.app_name) + " - " + s);
+        viewModel.getSearchingBy().observe(this, s -> {
+            setTitle(getString(R.string.app_name) + " - " + s.getName());
         });
+
+        viewModel.getCategories().observe(this, this::initSearchUI);
     }
 
     private void initLocationServices() {
@@ -128,6 +129,17 @@ public class MainActivity extends ComponentActivity {
         });
 
         Log.d(getClass().getSimpleName(), "Initializing search view...");
+
+    }
+
+    /**
+     * Initializes the search UI and sets the category filtration options.
+     * This function is idempotent as it clears the category views before
+     * adding new ones provided by a LiveData object in {@link CategoryRepo}.
+     *
+     * @param categories
+     */
+    private void initSearchUI(List<WLCategory> categories) {
         ChipGroup cg = getSearchView().findViewById(R.id.categoryChipGroup);
         cg.setOnCheckedChangeListener(new ChipGroup.OnCheckedChangeListener() {
             @Override
@@ -145,12 +157,20 @@ public class MainActivity extends ComponentActivity {
                 group.setOnCheckedChangeListener(this);
             }
         });
+
+        // Clear chip children before adding categories.
+        for (int i = 0; i < cg.getChildCount(); i++) {
+            View v = cg.getChildAt(i);
+            if (v instanceof Chip) {
+                cg.removeViewAt(i);
+            }
+        }
         String lastSearch = WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM);
-        for (String s : Constants.DEFAULT_SEARCH_CATEGORIES) {
+        for (WLCategory category : categories) {
             Chip c = new Chip(this);
-            c.setText(s);
+            c.setText(category.getName());
             c.setCheckable(true);
-            if (s.equals(lastSearch)) {
+            if (category.getName().equals(lastSearch)) {
                 c.setChecked(true);
             }
             cg.addView(c);
@@ -185,7 +205,7 @@ public class MainActivity extends ComponentActivity {
                 Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
 
                 WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
-                viewModel.setSearchTerm(checkedCategory);
+                viewModel.setSearchingBy(checkedCategory);
                 viewModel.refresh();
                 getSearchDialog().dismiss();
             });

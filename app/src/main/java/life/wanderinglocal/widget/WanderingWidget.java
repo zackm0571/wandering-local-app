@@ -16,6 +16,7 @@ import life.wanderinglocal.Constants;
 import life.wanderinglocal.R;
 import life.wanderinglocal.ServiceLocator;
 import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLCategory;
 
 /**
  * Implementation of App Widget functionality.
@@ -70,7 +71,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
             repo = new TimelineRepo(context);
         }
         repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
-        repo.setSearchTerm(getStringPreference(Constants.PREF_CATEGORY_KEY));
+        repo.setSearchBy(getStringPreference(Constants.PREF_CATEGORY_KEY));
         repo.setListener(this);
         repo.search();
     }

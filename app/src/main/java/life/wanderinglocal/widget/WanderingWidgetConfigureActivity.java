@@ -33,6 +33,7 @@ import life.wanderinglocal.Constants;
 import life.wanderinglocal.LocationUtils;
 import life.wanderinglocal.R;
 import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLPreferences;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
@@ -131,7 +132,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
             } else {
                 repo.setLocation(lat, lng);
             }
-            repo.setSearchTerm(category);
+            repo.setSearchBy(category);
             repo.search();
             progressBar.setVisibility(View.VISIBLE);
             new Handler().postDelayed(() -> {
