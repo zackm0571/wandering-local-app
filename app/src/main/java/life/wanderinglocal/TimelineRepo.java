@@ -24,6 +24,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * This repo populates the timeline from a variety of different data sources.
+ * Todo: Ads, Google Places API, WanderingLocal API, limit by distance, change sorting parameters.
+ */
 public class TimelineRepo {
     private static final double MIN_RATING = 4.0;
     private YelpApi yelpApi;
