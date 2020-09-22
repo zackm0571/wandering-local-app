@@ -41,7 +41,6 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
                     context.getPackageName(),
                     R.layout.wandering_widget);
             bindWidget(appWidgetManager, views, appWidgetId);
-
         }
     }
 
@@ -116,7 +115,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
             repo.setSearchBy(getStringPreference(Constants.PREF_CATEGORY_KEY));
             repo.setListener(this);
             // Update all widgets, note: multiple widgets not tested yet.
-            if(appWidgetIds != null) {
+            if (appWidgetIds != null) {
                 AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
                 for (int appWidgetId : appWidgetIds) {
                     RemoteViews views = new RemoteViews(
