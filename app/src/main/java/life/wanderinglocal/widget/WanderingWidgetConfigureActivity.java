@@ -26,9 +26,16 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+
+import life.wanderinglocal.CategoryRepo;
 import life.wanderinglocal.Constants;
 import life.wanderinglocal.LocationUtils;
 import life.wanderinglocal.R;
@@ -44,16 +51,15 @@ import static life.wanderinglocal.WLPreferences.saveStringPref;
 /**
  * The configuration screen for the {@link WanderingWidget WanderingWidget} AppWidget.
  */
-public class WanderingWidgetConfigureActivity extends Activity {
-    TimelineRepo repo;
-    HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
-    int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    EditText locationText, customSearchText;
-    CheckBox useMyLocationCheckbox;
-    RadioGroup categoriesRadioGroup;
-    ProgressBar progressBar;
-    EditText mAppWidgetText;
-    LocationListener locationListener = new LocationListener() {
+public class WanderingWidgetConfigureActivity extends ComponentActivity {
+    private HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
+    private CategoryRepo categoryRepo = new CategoryRepo();
+    private TimelineRepo repo;
+    private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+    private EditText locationText, customSearchText;
+    private CheckBox useMyLocationCheckbox;
+    private ProgressBar progressBar;
+    private LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
@@ -117,9 +123,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
             saveStringPref(context, PREF_LOCATION_KEY, location);
 
             // Store selected category
-            RadioButton selectedCategory = findViewById(categoriesRadioGroup.getCheckedRadioButtonId());
-            String category = (customSearchText.getVisibility() == View.VISIBLE)
-                    ? customSearchText.getText().toString() : selectedCategory.getText().toString();
+            String category = getCheckedCategory(findViewById(R.id.categoryChipGroup));
             saveStringPref(context, Constants.PREF_CATEGORY_KEY, category);
 
             Log.d(getClass().getSimpleName(), String.format("Widget category = %s, location = %s", category, location));
@@ -136,16 +140,16 @@ public class WanderingWidgetConfigureActivity extends Activity {
             repo.search();
             progressBar.setVisibility(View.VISIBLE);
             new Handler().postDelayed(() -> {
-                // Make sure we pass back the original appWidgetId
-                Intent resultValue = new Intent();
-                resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                setResult(RESULT_OK, resultValue);
-
                 // Refresh the widget
                 Intent refreshIntent = new Intent(context, WanderingWidget.class);
                 refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
                 refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
                 sendBroadcast(refreshIntent);
+
+                // Make sure we pass back the original appWidgetId
+                Intent resultValue = new Intent();
+                resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                setResult(RESULT_OK, resultValue);
 
                 finish();
             }, 1000);
@@ -166,7 +170,6 @@ public class WanderingWidgetConfigureActivity extends Activity {
         setResult(RESULT_CANCELED);
 
         setContentView(R.layout.wandering_widget_configure);
-        mAppWidgetText = (EditText) findViewById(R.id.appwidget_text);
         findViewById(R.id.add_button).setOnClickListener(mOnClickListener);
 
         locationText = findViewById(R.id.location_text);
@@ -174,10 +177,11 @@ public class WanderingWidgetConfigureActivity extends Activity {
 
         customSearchText = findViewById(R.id.custom_search_text);
 
+        categoryRepo.getCategories().observe(this, this::initSearchUI);
+
         useMyLocationCheckbox = findViewById(R.id.useMyLocation_checkbox);
-        categoriesRadioGroup = findViewById(R.id.category_group);
-        categoriesRadioGroup.setOnCheckedChangeListener(onCategoryChangedListener);
         useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
+
         progressBar = findViewById(R.id.progress_bar);
         repo = new TimelineRepo(this);
         // Find the widget id from the intent.
@@ -194,6 +198,65 @@ public class WanderingWidgetConfigureActivity extends Activity {
         }
     }
 
+    /**
+     * Initializes the search UI and sets the category filtration options.
+     * This function is idempotent as it clears the category views before
+     * adding new ones provided by a LiveData object in {@link CategoryRepo}.
+     *
+     * @param categories
+     */
+    private void initSearchUI(List<WLCategory> categories) {
+        ChipGroup cg = findViewById(R.id.categoryChipGroup);
+        cg.setOnCheckedChangeListener(new ChipGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(ChipGroup group, int checkedId) {
+                group.setOnCheckedChangeListener(null);
+                for (int i = 0; i < cg.getChildCount(); i++) {
+                    View v = cg.getChildAt(i);
+                    if (v instanceof Chip) {
+                        Chip c = (Chip) v;
+                        if (c.getId() != checkedId) {
+                            c.setChecked(false);
+                        }
+                    }
+                }
+                group.setOnCheckedChangeListener(this);
+            }
+        });
+
+        // Clear chip children before adding categories.
+        for (int i = 0; i < cg.getChildCount(); i++) {
+            View v = cg.getChildAt(i);
+            if (v instanceof Chip) {
+                cg.removeViewAt(i);
+            }
+        }
+        String lastSearch = WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM);
+        for (WLCategory category : categories) {
+            Chip c = new Chip(this);
+            c.setText(category.getName());
+            c.setCheckable(true);
+            if (category.getName().equals(lastSearch)) {
+                c.setChecked(true);
+            }
+            cg.addView(c);
+        }
+    }
+
+    @Nullable
+    private String getCheckedCategory(ChipGroup cg) {
+        if (cg == null) return null;
+        for (int i = 0; i < cg.getChildCount(); i++) {
+            View v = cg.getChildAt(i);
+            if (v instanceof Chip) {
+                Chip c = (Chip) v;
+                if (c.isChecked()) {
+                    return c.getText().toString();
+                }
+            }
+        }
+        return null;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     protected void requestPermissions() {
@@ -220,6 +283,27 @@ public class WanderingWidgetConfigureActivity extends Activity {
         }
     }
 
+    private Location getLastKnownLocation(LocationManager locationManager) {
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, Constants.PERMISSION_REQUEST_CODE);
+                return null;
+            }
+            Location l = locationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
+    }
+
     private void storeLastKnownLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -234,7 +318,7 @@ public class WanderingWidgetConfigureActivity extends Activity {
             Toast.makeText(this, "Could not get location from GPS, please check your settings.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location location = getLastKnownLocation(locationManager);
         String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
         Log.d(getClass().getSimpleName(), String.format("Last known location: %s", cityState));
         if (cityState.length() == 0) {

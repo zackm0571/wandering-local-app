@@ -28,6 +28,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
+import static life.wanderinglocal.Constants.PREF_LAT_KEY;
+import static life.wanderinglocal.Constants.PREF_LNG_KEY;
+
 public class MainActivity extends ComponentActivity {
     private static final int REQUEST_CODE = 71;
 
@@ -68,7 +71,6 @@ public class MainActivity extends ComponentActivity {
 
     private void initViewModel() {
         Log.d(getClass().getSimpleName(), "Initializing view model...");
-
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
         viewModel.initializeRepo(this);
@@ -85,6 +87,13 @@ public class MainActivity extends ComponentActivity {
         });
 
         viewModel.getCategories().observe(this, this::initSearchUI);
+        // Try to use last lat / lng if possible.
+        String lat = WLPreferences.loadStringPref(MainActivity.this, PREF_LAT_KEY, null);
+        String lng = WLPreferences.loadStringPref(MainActivity.this, PREF_LNG_KEY, null);
+
+        if (lat != null && lng != null) {
+            viewModel.setLocation(lat, lng);
+        }
     }
 
     private void initLocationServices() {
@@ -98,11 +107,32 @@ public class MainActivity extends ComponentActivity {
             }
         }
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        Location location = getLastKnownLocation(locationManager);
         if (location != null) {
             viewModel.setLocation(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
             viewModel.refresh();
         }
+    }
+
+    private Location getLastKnownLocation(LocationManager locationManager) {
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, REQUEST_CODE);
+                return null;
+            }
+            Location l = locationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        return bestLocation;
     }
 
     private void initUI() {
@@ -129,7 +159,6 @@ public class MainActivity extends ComponentActivity {
         });
 
         Log.d(getClass().getSimpleName(), "Initializing search view...");
-
     }
 
     /**
@@ -203,7 +232,6 @@ public class MainActivity extends ComponentActivity {
                 if (checkedCategory == null || checkedCategory.length() == 0) return;
                 progressBar.setVisibility(View.VISIBLE);
                 Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
-
                 WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
                 viewModel.setSearchingBy(checkedCategory);
                 viewModel.refresh();

@@ -12,6 +12,7 @@ public class MainViewModel extends ViewModel {
     private TimelineRepo repo;
     private CategoryRepo categoryRepo;
     private MutableLiveData<List<YelpData>> data;
+    private MutableLiveData<WLCategory> searchingBy;
 
     public void initializeRepo(Context context) {
         this.repo = new TimelineRepo(context);
@@ -47,7 +48,8 @@ public class MainViewModel extends ViewModel {
     }
 
     public MutableLiveData<WLCategory> getSearchingBy() {
-        return repo.getSearchingBy();
+        searchingBy = repo.getSearchingBy();
+        return searchingBy;
     }
 
     public MutableLiveData<List<WLCategory>> getCategories() {

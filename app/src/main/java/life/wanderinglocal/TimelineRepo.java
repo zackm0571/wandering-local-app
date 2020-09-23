@@ -1,8 +1,6 @@
 package life.wanderinglocal;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,7 +9,6 @@ import android.util.Log;
 import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.SearchResponse;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +16,6 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -105,11 +101,6 @@ public class TimelineRepo {
     public interface Listener {
         void onDataLoaded();
         void onDataPersisted();
-    }
-
-    public TimelineRepo() {
-        yelpApi = new YelpApi();
-        db = ServiceLocator.getDb();
     }
 
     public TimelineRepo(Context context) {
@@ -198,29 +189,6 @@ public class TimelineRepo {
                     Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                     data.setValue(cached);
                 });
-            }
-        });
-    }
-
-    private void loadImage(final YelpData yd) {
-        Log.d(getClass().getSimpleName(), "loadImage()");
-        Request request = new Request.Builder()
-                .url(yd.getImageUrl())
-                .build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(okhttp3.Call call, IOException e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws IOException {
-                byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
-                Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
-                if (bmp != null) {
-                    yd.setBmp(bmp);
-                }
             }
         });
     }
