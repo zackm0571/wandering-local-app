@@ -19,7 +19,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
             android:layout_weight="0.7"
-            android:text="Wandering Coffee"
+            android:text="Wandering Local"
             android:textSize="24sp" />
 
         <ImageButton

@@ -49,6 +49,8 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         // Set list adapter
         Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
         views.setRemoteAdapter(R.id.widgetList, intent);
+
+        views.setTextViewText(R.id.widgetTitle, context.getString(R.string.app_name) + " - " + repo.getSearchingBy().getValue().getName());
         // Refresh data when button clicked
         Intent refreshIntent = new Intent(context, WanderingWidget.class);
         refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
