@@ -25,6 +25,7 @@ import android.widget.ProgressBar;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.List;
 
@@ -33,6 +34,8 @@ import static life.wanderinglocal.Constants.PREF_LNG_KEY;
 
 public class MainActivity extends ComponentActivity {
     private static final int REQUEST_CODE = 71;
+
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     private View searchView;
     private ProgressBar progressBar;
@@ -44,6 +47,7 @@ public class MainActivity extends ComponentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initFirebase();
         initViewModel();
         initLocationServices();
         initUI();
@@ -69,12 +73,27 @@ public class MainActivity extends ComponentActivity {
         }
     }
 
+    private void initFirebase() {
+        Log.d(getClass().getSimpleName(), "Initializing Firebase...");
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, getClass().getSimpleName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, bundle);
+    }
+
     private void initViewModel() {
         Log.d(getClass().getSimpleName(), "Initializing view model...");
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
         viewModel.initializeRepo(this);
         viewModel.setSearchingBy(WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM));
+
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM,
+                viewModel.getSearchingBy().getValue().getName());
+        mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, bundle);
+
         viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
             @Override
             public void onChanged(List<YelpData> yelpData) {
@@ -144,6 +163,9 @@ public class MainActivity extends ComponentActivity {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
             getSearchDialog().show();
+            Bundle bundle = new Bundle();
+            bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, "Search");
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SEARCH, bundle);
         });
         Log.d(getClass().getSimpleName(), "Initializing RecyclerView...");
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -230,8 +252,12 @@ public class MainActivity extends ComponentActivity {
             searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
                 String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
                 if (checkedCategory == null || checkedCategory.length() == 0) return;
-                progressBar.setVisibility(View.VISIBLE);
                 Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory);
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_SEARCH_RESULTS, bundle);
+
+                progressBar.setVisibility(View.VISIBLE);
                 WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
                 viewModel.setSearchingBy(checkedCategory);
                 viewModel.refresh();
