@@ -11,6 +11,10 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.Callback;
 
+import static life.wanderinglocal.Constants.DEFAULT_SEARCH_RADIUS;
+import static life.wanderinglocal.Constants.SEARCH_BY_OPEN_NOW;
+import static life.wanderinglocal.Constants.SORT_RATING;
+
 public class YelpApi {
     private YelpFusionApi api;
 
@@ -33,11 +37,11 @@ public class YelpApi {
         public static final String PARAM_LOCATION = "location";
         public static final String PARAM_LIMIT = "limit";
         public static final String PARAM_OFFSET = "offset";
+        public static final String PARAM_OPEN_NOW = "open_now";
+        public static final String PARAM_SEARCH_RADIUS = "radius";
         public static final String PARAM_LATITUDE = "latitude";
         public static final String PARAM_LONGITUDE = "longitude";
         public static final String PARAM_SORT_BY = "sort_by";
-        private static final String SORT_RATING = "rating";
-        private static final String SORT_DISTANCE = "distance";
         Map<String, String> map = new HashMap<>();
 
         public SearchBuilder setTerm(String term) {
@@ -71,8 +75,10 @@ public class YelpApi {
         }
 
         public Map<String, String> build() {
-            // Sort by rating by default.
+            // Apply default filters
             map.put(PARAM_SORT_BY, SORT_RATING);
+            map.put(PARAM_OPEN_NOW, String.valueOf(SEARCH_BY_OPEN_NOW));
+            map.put(PARAM_SEARCH_RADIUS, String.valueOf(DEFAULT_SEARCH_RADIUS));
             return map;
         }
     }

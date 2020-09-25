@@ -20,6 +20,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static life.wanderinglocal.Constants.DEFAULT_RESULT_LIMIT;
+
 /**
  * This repo populates the timeline from a variety of different data sources.
  * Todo: Ads, Google Places API, WanderingLocal API, limit by distance, change sorting parameters.
@@ -162,11 +164,11 @@ public class TimelineRepo {
     }
 
     public MutableLiveData<List<YelpData>> search() {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
+        return search(new YelpApi.SearchBuilder().setLimit(DEFAULT_RESULT_LIMIT).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
     public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
-        return search(new YelpApi.SearchBuilder().setLimit(20).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
+        return search(new YelpApi.SearchBuilder().setLimit(DEFAULT_RESULT_LIMIT).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
     private void persist(List<YelpData> entries) {
