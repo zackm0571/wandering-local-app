@@ -14,8 +14,10 @@ import android.widget.RemoteViewsService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
@@ -34,6 +36,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import timber.log.Timber;
 
 import static life.wanderinglocal.WLPreferences.loadStringPref;
 
@@ -42,19 +45,16 @@ import static life.wanderinglocal.WLPreferences.loadStringPref;
  */
 public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
     private Context context;
-    private List<YelpData> data = new ArrayList<>();
     private OkHttpClient client = new OkHttpClient();
     private Handler handler = new Handler();
     private boolean isLoading = false;
-    private TimelineRepo repo;
     private MutableLiveData<List<YelpData>> liveData;
     private WLDatabase db;
-
+    private int appWidgetId = -1;
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
-        Log.d(getClass().getSimpleName(), "constructor");
+        Timber.d("constructor");
         this.context = applicationContext;
-        repo = new TimelineRepo(context);
-        liveData = repo.getData();
+        liveData = new MutableLiveData<>();
         if (ServiceLocator.getDb() == null) {
             ServiceLocator.buildDb(context);
         }
@@ -63,16 +63,15 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     @Override
     public void onCreate() {
-        Log.d(getClass().getSimpleName(), "onCreate");
+        Timber.d("onCreate");
         handler = new Handler(Looper.getMainLooper());
-        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING));
+        refreshRepo();
     }
 
     @Override
     public void onDataSetChanged() {
-        Log.d(getClass().getSimpleName(), "onDataSetChanged");
+        Timber.d("onDataSetChanged");
         refreshRepo();
-        AsyncTask.execute(() -> data = db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING));
     }
 
     @Override
@@ -81,7 +80,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     @Override
     public int getCount() {
-        Log.d(getClass().getSimpleName(), String.format("getCount() size = %d", liveData.getValue() != null ? liveData.getValue().size() : 0));
+        Timber.d("getCount() size = %d", liveData.getValue() != null ? liveData.getValue().size() : 0);
         isLoading = true;
         //todo
         int iterations = 0;
@@ -92,8 +91,8 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                 refreshRepo();
             }
             try {
-                Log.d(getClass().getSimpleName(), "getCount() blocking wait while images / data loads");
-                Thread.sleep(250);
+                Timber.d("getCount() blocking wait while images / data loads");
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -116,7 +115,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
     @Override
     public RemoteViews getViewAt(int i) {
-        Log.d(getClass().getSimpleName(), String.format("getViewAt(%d)", i));
+        Timber.d("getViewAt(%d)", i);
         if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0 || i >= liveData.getValue().size())
             return null;
 
@@ -128,7 +127,6 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         if (yd.getBmp() != null) {
             rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
         } else {
-            //            AsyncTask.execute(() -> loadImage(yd));
             final AtomicBoolean isWaiting = new AtomicBoolean();
             isWaiting.set(true);
             Request request = new Request.Builder()
@@ -166,14 +164,41 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     }
 
     private void refreshRepo() {
+        if(appWidgetId == -1){
+            Timber.e("AppwidgetId not set");
+            return;
+        }
+        TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
+        if (repo == null) {
+            Timber.e("Repo not created yet");
+            return;
+        }
         String lat = loadStringPref(context, Constants.PREF_LAT_KEY);
         String lng = loadStringPref(context, Constants.PREF_LNG_KEY);
-        String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY);
+        String location = loadStringPref(context, Constants.PREF_LOCATION_KEY);
+        String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY + appWidgetId, repo.getSearchingBy().getValue().getName());
         handler.post(() -> {
-            repo.setLocation(lat, lng);
+            if(lat.length() > 0 && lng.length() > 0) {
+                repo.setLocation(lat, lng);
+            }
+            else{
+                repo.setLocation(location);
+            }
             repo.setSearchBy(new WLCategory(searchTerm));
+            repo.setListener(new TimelineRepo.Listener() {
+                @Override
+                public void onDataLoaded() {
+
+                }
+
+                @Override
+                public void onDataPersisted() {
+                    Timber.d("Data persisted, loading from category: %s", repo.getSearchingBy());
+                    AsyncTask.execute(() -> liveData.postValue(db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING)));
+                }
+            });
             repo.search();
-            Log.d(getClass().getSimpleName(), String.format("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm));
+            Timber.d("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm);
         });
     }
 
@@ -195,5 +220,13 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     @Override
     public boolean hasStableIds() {
         return false;
+    }
+
+    public int getAppWidgetId() {
+        return appWidgetId;
+    }
+
+    public void setAppWidgetId(int appWidgetId) {
+        this.appWidgetId = appWidgetId;
     }
 }

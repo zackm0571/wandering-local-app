@@ -42,6 +42,7 @@ import life.wanderinglocal.R;
 import life.wanderinglocal.TimelineRepo;
 import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLPreferences;
+import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
 import static life.wanderinglocal.Constants.PREF_LNG_KEY;
@@ -54,7 +55,6 @@ import static life.wanderinglocal.WLPreferences.saveStringPref;
 public class WanderingWidgetConfigureActivity extends ComponentActivity {
     private HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
     private CategoryRepo categoryRepo = new CategoryRepo();
-    private TimelineRepo repo;
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private EditText locationText, customSearchText;
     private CheckBox useMyLocationCheckbox;
@@ -67,7 +67,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LOCATION_KEY, cityState);
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, String.valueOf(location.getLatitude()));
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, String.valueOf(location.getLongitude()));
-            Log.d(getClass().getSimpleName(), String.format("Storing location: %s, lat=%d, lng=%d", cityState, location.getLatitude(), location.getLongitude()));
+            Timber.d("Storing location: %s, lat=%d, lng=%d", cityState, location.getLatitude(), location.getLongitude());
         }
 
         @Override
@@ -96,64 +96,36 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             }
         }
     };
-    RadioGroup.OnCheckedChangeListener onCategoryChangedListener = new RadioGroup.OnCheckedChangeListener() {
-        @Override
-        public void onCheckedChanged(RadioGroup radioGroup, int id) {
-            radioGroup.setOnCheckedChangeListener(null);
-            radioGroup.clearCheck();
-            radioGroup.check(id);
-            RadioButton selectedButton = findViewById(id);
 
-            Log.d(getClass().getSimpleName(), String.format("Selected category: %s", selectedButton.getText().toString()));
-
-            if (selectedButton.getText().equals(getString(R.string.custom_search_term))) {
-                customSearchText.setVisibility(View.VISIBLE);
-            } else {
-                customSearchText.setVisibility(View.GONE);
-            }
-
-            radioGroup.setOnCheckedChangeListener(this);
-        }
-    };
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = WanderingWidgetConfigureActivity.this;
 
+            // Try to use lat / lng if possible, fall back to city, state
+            String lat = WLPreferences.loadStringPref(context, PREF_LAT_KEY);
+            String lng = WLPreferences.loadStringPref(context, PREF_LNG_KEY);
             String location = locationText.getText().toString();
             saveStringPref(context, PREF_LOCATION_KEY, location);
 
             // Store selected category
             String category = getCheckedCategory(findViewById(R.id.categoryChipGroup));
-            saveStringPref(context, Constants.PREF_CATEGORY_KEY, category);
+            saveStringPref(context, Constants.PREF_CATEGORY_KEY + mAppWidgetId, category);
 
-            Log.d(getClass().getSimpleName(), String.format("Widget category = %s, location = %s", category, location));
-            // Try to use lat / lng if possible, fall back to city, state
-            String lat = WLPreferences.loadStringPref(context, PREF_LAT_KEY);
-            String lng = WLPreferences.loadStringPref(context, PREF_LNG_KEY);
-
-            if (lat == null || lng == null) {
-                repo.setLocation(location);
-            } else {
-                repo.setLocation(lat, lng);
-            }
-            repo.setSearchBy(category);
-            repo.search();
+            Timber.d("Widget category = %s, location = %s, lat = %s, lng = %s", category, location, lat, lng);
             progressBar.setVisibility(View.VISIBLE);
-            new Handler().postDelayed(() -> {
-                // Refresh the widget
-                Intent refreshIntent = new Intent(context, WanderingWidget.class);
-                refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
-                refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                sendBroadcast(refreshIntent);
+            // Refresh the widget
+            Intent refreshIntent = new Intent(context, WanderingWidget.class);
+            refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+            refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+            sendBroadcast(refreshIntent);
 
-                // Make sure we pass back the original appWidgetId
-                Intent resultValue = new Intent();
-                resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                setResult(RESULT_OK, resultValue);
+            // Make sure we pass back the original appWidgetId
+            Intent resultValue = new Intent();
+            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+            setResult(RESULT_OK, resultValue);
 
-                finish();
-            }, 1000);
-            v.setEnabled(false);
+            WanderingWidget.sendRefreshBroadcast(WanderingWidgetConfigureActivity.this);
+            finish();
         }
     };
 
@@ -183,7 +155,6 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
 
         progressBar = findViewById(R.id.progress_bar);
-        repo = new TimelineRepo(this);
         // Find the widget id from the intent.
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -231,7 +202,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
                 cg.removeViewAt(i);
             }
         }
-        String lastSearch = WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM);
+        String lastSearch = WLPreferences.loadStringPref(this, Constants.PREF_CATEGORY_KEY + mAppWidgetId, Constants.DEFAULT_SEARCH_TERM);
         for (WLCategory category : categories) {
             Chip c = new Chip(this);
             c.setText(category.getName());
@@ -331,12 +302,10 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             String lat = String.valueOf(location.getLatitude());
             String lng = String.valueOf(location.getLongitude());
 
-            repo.setLocation(lat, lng);
-
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LOCATION_KEY, cityState);
-            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, String.valueOf(location.getLatitude()));
-            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, String.valueOf(location.getLongitude()));
-            Log.d(getClass().getSimpleName(), String.format("Storing location: %s, lat=%f, lng=%f", cityState, location.getLatitude(), location.getLongitude()));
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, lat);
+            saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, lng);
+            Timber.d("Storing location: %s, lat=%f, lng=%f", cityState, location.getLatitude(), location.getLongitude());
         }
     }
 }

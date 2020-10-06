@@ -26,6 +26,8 @@
             android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="life.wanderinglocal.WIDGET_CLICK" />
             </intent-filter>
         </activity>
 

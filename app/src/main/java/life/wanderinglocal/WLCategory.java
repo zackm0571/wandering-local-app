@@ -12,7 +12,8 @@ public class WLCategory {
         this.name = name;
     }
 
-    private String name;
+    @NonNull
+    private String name = "";
 
     @NonNull
     public String getName() {

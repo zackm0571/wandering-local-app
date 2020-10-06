@@ -99,7 +99,7 @@ public class TimelineRepo {
         searchingBy.setValue(new WLCategory(s));
     }
 
-    @Deprecated
+    //todo: replace with observer
     public interface Listener {
         void onDataLoaded();
         void onDataPersisted();
