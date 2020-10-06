@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
@@ -39,7 +40,6 @@ import life.wanderinglocal.CategoryRepo;
 import life.wanderinglocal.Constants;
 import life.wanderinglocal.LocationUtils;
 import life.wanderinglocal.R;
-import life.wanderinglocal.TimelineRepo;
 import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLPreferences;
 import timber.log.Timber;
@@ -111,21 +111,26 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             String category = getCheckedCategory(findViewById(R.id.categoryChipGroup));
             saveStringPref(context, Constants.PREF_CATEGORY_KEY + mAppWidgetId, category);
 
-            Timber.d("Widget category = %s, location = %s, lat = %s, lng = %s", category, location, lat, lng);
             progressBar.setVisibility(View.VISIBLE);
-            // Refresh the widget
-            Intent refreshIntent = new Intent(context, WanderingWidget.class);
-            refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
-            refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-            sendBroadcast(refreshIntent);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Refresh the widget
+                    Timber.d("Configuring Widget: widgetId = %d, category = %s, location = %s, lat = %s, lng = %s", mAppWidgetId, category, location, lat, lng);
+                    Intent refreshIntent = new Intent(context, WanderingWidget.class);
+                    refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+                    refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                    sendBroadcast(refreshIntent);
 
-            // Make sure we pass back the original appWidgetId
-            Intent resultValue = new Intent();
-            resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-            setResult(RESULT_OK, resultValue);
+                    // Make sure we pass back the original appWidgetId
+                    Intent resultValue = new Intent();
+                    resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                    setResult(RESULT_OK, resultValue);
 
-            WanderingWidget.sendRefreshBroadcast(WanderingWidgetConfigureActivity.this);
-            finish();
+                    WanderingWidget.sendRefreshBroadcast(WanderingWidgetConfigureActivity.this);
+                    finish();
+                }
+            }, new Random().nextLong() % 1000 + 200);
         }
     };
 
@@ -159,8 +164,9 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if (extras != null) {
+            //todo: why is this always off by 1?
             mAppWidgetId = extras.getInt(
-                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) + 1;
         }
 
         // If this activity was started with an intent without an app widget ID, finish with an error.
@@ -279,19 +285,19 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                Timber.d("Requesting location permissions");
                 ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, Constants.PERMISSION_REQUEST_CODE);
                 return;
             }
         }
-        Log.d(getClass().getSimpleName(), "Location granted, grabbing last known location");
+        Timber.d("Location granted, grabbing last known location");
         if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
             Toast.makeText(this, "Could not get location from GPS, please check your settings.", Toast.LENGTH_SHORT).show();
             return;
         }
         Location location = getLastKnownLocation(locationManager);
         String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
-        Log.d(getClass().getSimpleName(), String.format("Last known location: %s", cityState));
+        Timber.d("Last known location: %s", cityState);
         if (cityState.length() == 0) {
             locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, handlerThread.getLooper());
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, handlerThread.getLooper());

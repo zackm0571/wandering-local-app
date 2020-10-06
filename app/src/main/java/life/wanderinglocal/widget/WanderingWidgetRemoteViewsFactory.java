@@ -51,6 +51,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     private MutableLiveData<List<YelpData>> liveData;
     private WLDatabase db;
     private int appWidgetId = -1;
+
     public WanderingWidgetRemoteViewsFactory(Context applicationContext, Intent intent) {
         Timber.d("constructor");
         this.context = applicationContext;
@@ -164,42 +165,15 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     }
 
     private void refreshRepo() {
-        if(appWidgetId == -1){
+        if (appWidgetId == -1) {
             Timber.e("AppwidgetId not set");
             return;
         }
-        TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
-        if (repo == null) {
-            Timber.e("Repo not created yet");
-            return;
-        }
-        String lat = loadStringPref(context, Constants.PREF_LAT_KEY);
-        String lng = loadStringPref(context, Constants.PREF_LNG_KEY);
-        String location = loadStringPref(context, Constants.PREF_LOCATION_KEY);
-        String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY + appWidgetId, repo.getSearchingBy().getValue().getName());
-        handler.post(() -> {
-            if(lat.length() > 0 && lng.length() > 0) {
-                repo.setLocation(lat, lng);
-            }
-            else{
-                repo.setLocation(location);
-            }
-            repo.setSearchBy(new WLCategory(searchTerm));
-            repo.setListener(new TimelineRepo.Listener() {
-                @Override
-                public void onDataLoaded() {
+        String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY + appWidgetId, Constants.DEFAULT_SEARCH_TERM);
 
-                }
+        Timber.d("Data persisted, loading from category: %s",searchTerm);
+        AsyncTask.execute(() -> liveData.postValue(db.dao().getDataWithParams(searchTerm, Constants.DEFAULT_MIN_RATING)));
 
-                @Override
-                public void onDataPersisted() {
-                    Timber.d("Data persisted, loading from category: %s", repo.getSearchingBy());
-                    AsyncTask.execute(() -> liveData.postValue(db.dao().getDataWithParams(repo.getSearchingBy().getValue().getName(), Constants.DEFAULT_MIN_RATING)));
-                }
-            });
-            repo.search();
-            Timber.d("Refreshing repo, lat = %s, lng = %s, searchTerm = %s", lat, lng, searchTerm);
-        });
     }
 
     @Override

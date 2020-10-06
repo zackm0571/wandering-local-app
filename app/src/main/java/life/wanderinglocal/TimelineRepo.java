@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.yelp.fusion.client.models.Business;
 import com.yelp.fusion.client.models.SearchResponse;
@@ -15,10 +14,12 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
+
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.DEFAULT_RESULT_LIMIT;
 
@@ -37,6 +38,7 @@ public class TimelineRepo {
         }
         return data;
     }
+
     private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
     private MutableLiveData<WLCategory> searchingBy = new MutableLiveData<>(); // Store filtration options in WLCategory?
 
@@ -81,7 +83,7 @@ public class TimelineRepo {
      */
     @NonNull
     public MutableLiveData<WLCategory> getSearchingBy() {
-        if(searchingBy.getValue() == null) {
+        if (searchingBy.getValue() == null) {
             searchingBy.setValue(CategoryRepo.DEFAULT_SEARCH_CATEGORY);
         }
         return searchingBy;
@@ -89,19 +91,21 @@ public class TimelineRepo {
 
     /**
      * Sets the {@link WLCategory} used for searching / populating the timeline.
+     *
      * @param category
      */
     public void setSearchBy(@NonNull WLCategory category) {
         searchingBy.setValue(category);
     }
 
-    public void setSearchBy(String s){
+    public void setSearchBy(String s) {
         searchingBy.setValue(new WLCategory(s));
     }
 
     //todo: replace with observer
     public interface Listener {
         void onDataLoaded();
+
         void onDataPersisted();
     }
 
@@ -117,7 +121,7 @@ public class TimelineRepo {
     }
 
     private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
-        Log.d(getClass().getSimpleName(), String.format("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().getValue().toString()));
+        Timber.d("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().getValue().toString());
         if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
             return data;
         yelpApi.search(new Callback<SearchResponse>() {
@@ -137,7 +141,7 @@ public class TimelineRepo {
                     data.setDistance(b.getDistance());
                     results.add(data);
                 }
-                Log.d(getClass().getSimpleName(), String.format("Yelp search has returned %d results", results.size()));
+                Timber.d("Yelp search has returned %d results", results.size());
                 Collections.sort(results, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                 if (results.size() > 0) {
                     data.postValue(results);
@@ -148,7 +152,7 @@ public class TimelineRepo {
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                Log.e(getClass().getSimpleName(), call.request().toString());
+                Timber.e(call.request().toString());
                 AsyncTask.execute(() -> {
                     if (db != null) {
                         List<YelpData> cached = db.dao().getDataWithParams(getSearchingBy().getValue().getName(), MIN_RATING);
@@ -173,16 +177,16 @@ public class TimelineRepo {
 
     private void persist(List<YelpData> entries) {
         if (ServiceLocator.getDb() == null)
-            Log.d(getClass().getSimpleName(), "DB is null, not persisting results");
+            Timber.d("DB is null, not persisting results");
         AsyncTask.execute(() -> {
             ServiceLocator.getDb().dao().addEntries(entries);
             if (listener != null) listener.onDataPersisted();
-            Log.d(getClass().getSimpleName(), String.format("Persisting %d items to db", entries.size()));
+            Timber.d("Persisting %d items to db", entries.size());
         });
     }
 
     private void loadCached() {
-        Log.d(getClass().getSimpleName(), "loadCached");
+        Timber.d("loadCached");
         final String searchTerm = getSearchingBy().getValue().getName();
         AsyncTask.execute(() -> {
             List<YelpData> cached = db.dao().getDataWithParams(searchTerm, MIN_RATING);

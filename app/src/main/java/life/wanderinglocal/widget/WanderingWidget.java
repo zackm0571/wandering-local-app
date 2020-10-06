@@ -19,7 +19,6 @@ import life.wanderinglocal.Constants;
 import life.wanderinglocal.R;
 import life.wanderinglocal.ServiceLocator;
 import life.wanderinglocal.TimelineRepo;
-import life.wanderinglocal.WLCategory;
 import timber.log.Timber;
 
 /**
@@ -28,7 +27,6 @@ import timber.log.Timber;
  * todo: set an alarm with an Intent that your AppWidgetProvider receives, using the AlarmManager. Set the alarm type to either ELAPSED_REALTIME or RTC, which will only deliver the alarm when the device is awake. Then set updatePeriodMillis to zero ("0"). (https://developer.android.com/guide/topics/appwidgets)
  */
 public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.Listener {
-    private Handler handler = new Handler();
     private Context context;
 
     @Override
@@ -51,11 +49,18 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         if (repo == null) {
             repo = new TimelineRepo(context);
         }
-        repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
+        String lat = getStringPreference(Constants.PREF_LAT_KEY),
+                lng = getStringPreference(Constants.PREF_LNG_KEY);
+        if (!lat.isEmpty() && !lng.isEmpty()) {
+            repo.setLocation(lat, lng);
+        } else {
+            repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
+        }
         repo.setSearchBy(getStringPreference(Constants.PREF_CATEGORY_KEY + appWidgetId));
         repo.search();
         WidgetSearchRepo.widgetIdRepoMap.put(appWidgetId, repo);
-
+        appWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, new ComponentName(context, WanderingWidget.class));
+        Timber.d("Binding app widget id: %s", appWidgetId);
         // Bind views
         Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
