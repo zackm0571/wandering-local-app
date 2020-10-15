@@ -3,9 +3,10 @@ package life.wanderinglocal;
 import android.graphics.Bitmap;
 
 public class WLTimelineEntry {
-    public enum Provider{
-        YELP
+    public enum Provider {
+        AD, YELP
     }
+
     public String getBusinessName() {
         return businessName;
     }

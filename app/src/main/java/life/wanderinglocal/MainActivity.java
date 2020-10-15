@@ -22,12 +22,20 @@ import android.view.View;
 import android.view.Window;
 import android.widget.ProgressBar;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.List;
+
+import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
 import static life.wanderinglocal.Constants.PREF_LNG_KEY;
@@ -51,6 +59,7 @@ public class MainActivity extends ComponentActivity {
         initViewModel();
         initLocationServices();
         initUI();
+        initAdmob();
     }
 
     @Override
@@ -115,12 +124,51 @@ public class MainActivity extends ComponentActivity {
         }
     }
 
+    private void initAdmob() {
+        Timber.d("Initializing Admob...");
+        MobileAds.initialize(this);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        AdView adView = findViewById(R.id.adView);
+        adView.setAdListener(new AdListener() {
+            @Override
+            public void onAdFailedToLoad(LoadAdError loadAdError) {
+                super.onAdFailedToLoad(loadAdError);
+                Timber.e(loadAdError.getMessage());
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, "Ad failed to load");
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            }
+
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+            }
+
+            @Override
+            public void onAdClicked() {
+                super.onAdClicked();
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, "Ad clicked");
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            }
+
+            @Override
+            public void onAdImpression() {
+                super.onAdImpression();
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.CONTENT, "Ad impression");
+                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+            }
+        });
+        adView.loadAd(adRequest);
+    }
+
     private void initLocationServices() {
-        Log.d(getClass().getSimpleName(), "Initializing location services...");
+        Timber.d("Initializing location services...");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                Timber.d("Requesting location permissions");
                 ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, REQUEST_CODE);
                 return;
             }
@@ -252,7 +300,7 @@ public class MainActivity extends ComponentActivity {
             searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
                 String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
                 if (checkedCategory == null || checkedCategory.length() == 0) return;
-                Log.d(getClass().getSimpleName(), String.format("Searching for %s", checkedCategory));
+                Timber.d("Searching for %s", checkedCategory);
                 Bundle bundle = new Bundle();
                 bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory);
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_SEARCH_RESULTS, bundle);
