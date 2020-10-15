@@ -30,10 +30,13 @@ import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.common.util.CrashUtils;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.google.firebase.crashlytics.internal.common.CrashlyticsCore;
 
 import java.util.List;
 
@@ -85,7 +88,10 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void initFirebase() {
-        Log.d(getClass().getSimpleName(), "Initializing Firebase...");
+        Timber.d("Initializing Firebase...");
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true);
+        FirebaseCrashlytics.getInstance().sendUnsentReports();
+
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         Bundle bundle = new Bundle();
