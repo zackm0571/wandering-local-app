@@ -6,6 +6,7 @@
     android:background="@drawable/rounded_border_alpha"
     android:outlineProvider="bounds"
     android:layout_margin="20dp"
+    app:cardCornerRadius="10dp"
     android:orientation="vertical">
 
     <LinearLayout

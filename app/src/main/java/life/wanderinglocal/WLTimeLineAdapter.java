@@ -13,6 +13,11 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -20,6 +25,8 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 
 public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.YelpBusiness> {
     private int displayHeight = -1;
@@ -76,10 +83,15 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         holder.imgView.setImageBitmap(yelpData.getBmp());
 
         ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
-        params.height = getDisplayHeight() / 4;
-        params.width = getDisplayHeight() / 4;
+        params.height = getDisplayHeight() / 3;
+        params.width = getDisplayHeight() / 3;
         holder.imgView.setLayoutParams(params);
-        Picasso.get().load(Uri.decode(yelpData.getImageUrl())).into(holder.imgView);
+        Glide.with(context).load(yelpData.getImageUrl())
+                .transition(withCrossFade())
+                .centerCrop()
+                        .skipMemoryCache(true)
+                        .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                .into(holder.imgView);
 
         holder.ratingBar.setNumStars(5);
         holder.ratingBar.setRating((float) yelpData.getRating());

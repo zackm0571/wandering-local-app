@@ -31,29 +31,37 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    //Android
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'io.github.ranga543:yelp-fusion-client:0.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    implementation 'com.squareup.picasso:picasso:2.71828'
-    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'com.jakewharton.timber:timber:4.7.1'
     implementation 'com.google.android.material:material:1.2.0'
-    implementation 'com.google.firebase:firebase-analytics:17.5.0'
-    implementation 'com.google.firebase:firebase-ads:19.3.0'
-    annotationProcessor "androidx.room:room-compiler:2.2.5"
-    // For Kotlin use kapt instead of annotationProcessor
-
-    implementation "androidx.room:room-runtime:2.2.5"
-
-    // Because RxAndroid releases are few and far between, it is recommended you also
-    // explicitly depend on RxJava's latest version for bug fixes and new features.
-    // (see https://github.com/ReactiveX/RxJava/releases for latest 3.x.x version)
-    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
-    testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
+    // Firebase
+    implementation 'com.google.firebase:firebase-analytics:17.5.0'
+    implementation 'com.google.firebase:firebase-ads:19.3.0'
+
+    //RxJava
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'
+
+    // Yelp
+    implementation 'io.github.ranga543:yelp-fusion-client:0.1.4'
+
+    //Image Loading
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
+
+    //Timber
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    //Room
+    annotationProcessor "androidx.room:room-compiler:2.2.5"
+    implementation "androidx.room:room-runtime:2.2.5"
+    testImplementation 'junit:junit:4.12'
 }
