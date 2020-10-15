@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -285,6 +287,7 @@ public class MainActivity extends ComponentActivity {
         if (searchDialog == null) {
             searchDialog = new AlertDialog.Builder(this).setView(getSearchView()).create();
             searchDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            searchDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
         return searchDialog;
     }
