@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel;
 public class MainViewModel extends ViewModel {
     private TimelineRepo repo;
     private CategoryRepo categoryRepo;
-    private MutableLiveData<List<YelpData>> data;
+    private MutableLiveData<List<WLTimelineEntry>> data;
     private MutableLiveData<WLCategory> searchingBy;
 
     public void initializeRepo(Context context) {
@@ -20,7 +20,7 @@ public class MainViewModel extends ViewModel {
         this.data = repo.search();
     }
 
-    public LiveData<List<YelpData>> getYelpData() {
+    public LiveData<List<WLTimelineEntry>> getTimeline() {
         return data;
     }
 

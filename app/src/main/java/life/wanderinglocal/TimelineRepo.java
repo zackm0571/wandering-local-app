@@ -31,7 +31,7 @@ public class TimelineRepo {
     private static final double MIN_RATING = 4.0;
     private YelpApi yelpApi;
 
-    public MutableLiveData<List<YelpData>> getData() {
+    public MutableLiveData<List<WLTimelineEntry>> getData() {
         if (data == null) {
             data = new MutableLiveData<>();
             data.setValue(new ArrayList<>());
@@ -39,7 +39,7 @@ public class TimelineRepo {
         return data;
     }
 
-    private MutableLiveData<List<YelpData>> data = new MutableLiveData<>();
+    private MutableLiveData<List<WLTimelineEntry>> data = new MutableLiveData<>();
     private MutableLiveData<WLCategory> searchingBy = new MutableLiveData<>(); // Store filtration options in WLCategory?
 
     private Handler handler = new Handler(Looper.getMainLooper());
@@ -120,7 +120,7 @@ public class TimelineRepo {
         loadCached();
     }
 
-    private MutableLiveData<List<YelpData>> search(YelpApi.SearchBuilder builder) {
+    private MutableLiveData<List<WLTimelineEntry>> search(YelpApi.SearchBuilder builder) {
         Timber.d("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", getLocation(), getLat(), getLng(), getSearchingBy().getValue().toString());
         if (getLat().length() == 0 && getLng().length() == 0 && getLocation().length() == 0)
             return data;
@@ -129,9 +129,9 @@ public class TimelineRepo {
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
                 SearchResponse searchResponse = response.body();
                 ArrayList<Business> businesses = searchResponse.getBusinesses();
-                List<YelpData> results = new ArrayList<>();
+                List<WLTimelineEntry> results = new ArrayList<>();
                 for (Business b : businesses) {
-                    YelpData data = new YelpData();
+                    WLTimelineEntry data = new WLTimelineEntry();
                     data.setBusinessName(b.getName());
                     data.setImageUrl(b.getImageUrl());
                     data.setYelpUrl(b.getUrl());
@@ -155,7 +155,7 @@ public class TimelineRepo {
                 Timber.e(call.request().toString());
                 AsyncTask.execute(() -> {
                     if (db != null) {
-                        List<YelpData> cached = db.dao().getDataWithParams(getSearchingBy().getValue().getName(), MIN_RATING);
+                        List<WLTimelineEntry> cached = db.dao().getDataWithParams(getSearchingBy().getValue().getName(), MIN_RATING);
                         if (cached.size() > 0) {
                             Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
                             data.postValue(cached);
@@ -167,15 +167,15 @@ public class TimelineRepo {
         return data;
     }
 
-    public MutableLiveData<List<YelpData>> search() {
+    public MutableLiveData<List<WLTimelineEntry>> search() {
         return search(new YelpApi.SearchBuilder().setLimit(DEFAULT_RESULT_LIMIT).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
-    public MutableLiveData<List<YelpData>> searchWithOffset(int offset) {
+    public MutableLiveData<List<WLTimelineEntry>> searchWithOffset(int offset) {
         return search(new YelpApi.SearchBuilder().setLimit(DEFAULT_RESULT_LIMIT).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(getLocation()).setTerm(getSearchingBy().getValue().getName()));
     }
 
-    private void persist(List<YelpData> entries) {
+    private void persist(List<WLTimelineEntry> entries) {
         if (ServiceLocator.getDb() == null)
             Timber.d("DB is null, not persisting results");
         AsyncTask.execute(() -> {
@@ -189,7 +189,7 @@ public class TimelineRepo {
         Timber.d("loadCached");
         final String searchTerm = getSearchingBy().getValue().getName();
         AsyncTask.execute(() -> {
-            List<YelpData> cached = db.dao().getDataWithParams(searchTerm, MIN_RATING);
+            List<WLTimelineEntry> cached = db.dao().getDataWithParams(searchTerm, MIN_RATING);
             if (cached != null && cached.size() > 0 && (data.getValue() == null || data.getValue().size() == 0)) {
                 handler.post(() -> {
                     Collections.sort(cached, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));

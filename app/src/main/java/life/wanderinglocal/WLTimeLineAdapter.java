@@ -9,16 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-import com.bumptech.glide.request.RequestOptions;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,19 +37,19 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         return displayHeight;
     }
 
-    private List<YelpData> data = new ArrayList<>();
+    private List<WLTimelineEntry> data = new ArrayList<>();
     private Context context;
 
     public WLTimeLineAdapter(Context context) {
         this.context = context;
     }
 
-    public void addData(YelpData yd) {
+    public void addData(WLTimelineEntry yd) {
         data.add(yd);
         notifyDataSetChanged();
     }
 
-    public void setData(List<YelpData> data) {
+    public void setData(List<WLTimelineEntry> data) {
         this.data = data;
         notifyDataSetChanged();
     }
@@ -69,24 +64,24 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
 
     @Override
     public void onBindViewHolder(@NonNull YelpBusiness holder, int position) {
-        final YelpData yelpData = data.get(position);
-        holder.businessNameTextView.setText(yelpData.getBusinessName());
-        holder.businessAddressTextView.setText(yelpData.getLocationString());
+        final WLTimelineEntry timelineEntry = data.get(position);
+        holder.businessNameTextView.setText(timelineEntry.getBusinessName());
+        holder.businessAddressTextView.setText(timelineEntry.getLocationString());
         holder.businessAddressTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Uri locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + yelpData.getLocationString()));
+                Uri locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + timelineEntry.getLocationString()));
                 Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
                 context.startActivity(intent);
             }
         });
-        holder.imgView.setImageBitmap(yelpData.getBmp());
+        holder.imgView.setImageBitmap(timelineEntry.getBmp());
 
         ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
         params.height = getDisplayHeight() / 3;
         params.width = getDisplayHeight() / 3;
         holder.imgView.setLayoutParams(params);
-        Glide.with(context).load(yelpData.getImageUrl())
+        Glide.with(context).load(timelineEntry.getImageUrl())
                 .transition(withCrossFade())
                 .centerCrop()
                         .skipMemoryCache(true)
@@ -94,11 +89,11 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
                 .into(holder.imgView);
 
         holder.ratingBar.setNumStars(5);
-        holder.ratingBar.setRating((float) yelpData.getRating());
+        holder.ratingBar.setRating((float) timelineEntry.getRating());
         holder.itemView.setOnClickListener(view -> {
-            if (yelpData.getYelpUrl() == null) return;
+            if (timelineEntry.getYelpUrl() == null) return;
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(yelpData.getYelpUrl()));
+            intent.setData(Uri.parse(timelineEntry.getYelpUrl()));
             context.startActivity(intent);
         });
     }

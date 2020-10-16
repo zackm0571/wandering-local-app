@@ -7,30 +7,23 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.AdapterView;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.MutableLiveData;
 
 import life.wanderinglocal.Constants;
 import life.wanderinglocal.IOUtils;
 import life.wanderinglocal.R;
 import life.wanderinglocal.ServiceLocator;
-import life.wanderinglocal.TimelineRepo;
-import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLDatabase;
-import life.wanderinglocal.YelpData;
+import life.wanderinglocal.WLTimelineEntry;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -48,7 +41,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
     private OkHttpClient client = new OkHttpClient();
     private Handler handler = new Handler();
     private boolean isLoading = false;
-    private MutableLiveData<List<YelpData>> liveData;
+    private MutableLiveData<List<WLTimelineEntry>> liveData;
     private WLDatabase db;
     private int appWidgetId = -1;
 
@@ -99,7 +92,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
             }
             if (liveData.getValue() != null && liveData.getValue().size() > 0) {
                 int count = 0;
-                for (YelpData yd : liveData.getValue()) {
+                for (WLTimelineEntry yd : liveData.getValue()) {
                     if (yd.getBmp() != null) {
                         count++;
                     }
@@ -120,7 +113,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0 || i >= liveData.getValue().size())
             return null;
 
-        YelpData yd = liveData.getValue().get(i);
+        WLTimelineEntry yd = liveData.getValue().get(i);
         final RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.yelp_business_row_widget);
         rv.setTextViewText(R.id.businessName, yd.getBusinessName());
         rv.setTextViewText(R.id.businessRatingText, String.format(Locale.getDefault(),

@@ -26,17 +26,14 @@ import android.widget.ProgressBar;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.common.util.CrashUtils;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
-import com.google.firebase.crashlytics.internal.common.CrashlyticsCore;
 
 import java.util.List;
 
@@ -111,9 +108,9 @@ public class MainActivity extends ComponentActivity {
                 viewModel.getSearchingBy().getValue().getName());
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, bundle);
 
-        viewModel.getYelpData().observe(this, new Observer<List<YelpData>>() {
+        viewModel.getTimeline().observe(this, new Observer<List<WLTimelineEntry>>() {
             @Override
-            public void onChanged(List<YelpData> yelpData) {
+            public void onChanged(List<WLTimelineEntry> yelpData) {
                 yelpAdapter.setData(yelpData);
                 progressBar.setVisibility(View.GONE);
             }
