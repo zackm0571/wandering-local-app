@@ -166,7 +166,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         if (extras != null) {
             //todo: why is this always off by 1?
             mAppWidgetId = extras.getInt(
-                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) + 1;
+                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
         // If this activity was started with an intent without an app widget ID, finish with an error.

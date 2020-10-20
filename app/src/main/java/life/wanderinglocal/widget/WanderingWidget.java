@@ -84,13 +84,17 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onDeleted(Context context, int[] appWidgetIds) {
         // When the user deletes the widget, delete the preference associated with it.
         this.context = context;
+        for(Integer id : appWidgetIds) {
+            WidgetSearchRepo.widgetIdRepoMap.remove(id);
+        }
+
     }
 
     @Override
     public void onEnabled(Context context) {
         // Enter relevant functionality for when the first widget is created
         this.context = context;
-        Log.d(getClass().getSimpleName(), "onEnabled widget");
+        Timber.d("onEnabled widget");
     }
 
     @Override
@@ -102,7 +106,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
-        Log.d(getClass().getSimpleName(), "onAppWidgetOptionsChanged");
+        Timber.d("onAppWidgetOptionsChanged");
         this.context = context;
         sendRefreshBroadcast(context);
     }

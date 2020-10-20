@@ -40,8 +40,7 @@
         </activity>
 
         <receiver
-            android:name=".widget.WanderingWidget"
-            android:enabled="false">
+            android:name=".widget.WanderingWidget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="life.wanderinglocal.WIDGET_CLICK" />
