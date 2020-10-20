@@ -37,6 +37,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.util.List;
 
+import life.wanderinglocal.databinding.ActivityMainBinding;
 import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
@@ -47,8 +48,9 @@ public class MainActivity extends ComponentActivity {
 
     private FirebaseAnalytics mFirebaseAnalytics;
 
+    private ActivityMainBinding mainBinding;
+
     private View searchView;
-    private ProgressBar progressBar;
     private AlertDialog searchDialog;
     private WLTimeLineAdapter yelpAdapter;
     private MainViewModel viewModel;
@@ -56,11 +58,11 @@ public class MainActivity extends ComponentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         initFirebase();
+        initUI();
+        setContentView(mainBinding.getRoot());
         initViewModel();
         initLocationServices();
-        initUI();
         initAdmob();
     }
 
@@ -97,7 +99,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void initViewModel() {
-        Log.d(getClass().getSimpleName(), "Initializing view model...");
+        Timber.d("Initializing view model...");
         viewModel = new ViewModelProvider(getViewModelStore(), ViewModelProvider.AndroidViewModelFactory.
                 getInstance(getApplication())).get(MainViewModel.class);
         viewModel.initializeRepo(this);
@@ -108,12 +110,10 @@ public class MainActivity extends ComponentActivity {
                 viewModel.getSearchingBy().getValue().getName());
         mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, bundle);
 
-        viewModel.getTimeline().observe(this, new Observer<List<WLTimelineEntry>>() {
-            @Override
-            public void onChanged(List<WLTimelineEntry> yelpData) {
-                yelpAdapter.setData(yelpData);
-                progressBar.setVisibility(View.GONE);
-            }
+        viewModel.getTimeline().observe(this, yelpData -> {
+            Timber.d("Timeline updated");
+            yelpAdapter.setData(yelpData);
+            mainBinding.progressBar.setVisibility(View.GONE);
         });
         viewModel.getSearchingBy().observe(this, s -> {
             setTitle(getString(R.string.app_name) + " - " + s.getName());
@@ -191,7 +191,7 @@ public class MainActivity extends ComponentActivity {
         Location bestLocation = null;
         for (String provider : providers) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                Timber.d("Requesting location permissions");
                 ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, REQUEST_CODE);
                 return null;
             }
@@ -208,24 +208,25 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void initUI() {
-        Log.d(getClass().getSimpleName(), "Initializing UI...");
-        Log.d(getClass().getSimpleName(), "Initializing ProgressBar...");
-        progressBar = findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.VISIBLE);
-        Log.d(getClass().getSimpleName(), "Initializing FloatingActionBar...");
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(view -> {
+        Timber.d("Initializing UI...");
+
+        mainBinding = ActivityMainBinding.inflate(getLayoutInflater());
+
+        Timber.d("Initializing ProgressBar...");
+        mainBinding.progressBar.setVisibility(View.VISIBLE);
+
+        Timber.d("Initializing FloatingActionBar...");
+        mainBinding.fab.setOnClickListener(view -> {
             getSearchDialog().show();
             Bundle bundle = new Bundle();
             bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, "Search");
             mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SEARCH, bundle);
         });
-        Log.d(getClass().getSimpleName(), "Initializing RecyclerView...");
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        Timber.d("Initializing RecyclerView...");
         yelpAdapter = new WLTimeLineAdapter(this);
-        recyclerView.setAdapter(yelpAdapter);
-        recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        mainBinding.recyclerView.setAdapter(yelpAdapter);
+        mainBinding.recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        mainBinding.recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -233,7 +234,7 @@ public class MainActivity extends ComponentActivity {
             }
         });
 
-        Log.d(getClass().getSimpleName(), "Initializing search view...");
+        Timber.d("Initializing search view...");
     }
 
     /**
@@ -311,7 +312,7 @@ public class MainActivity extends ComponentActivity {
                 bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory);
                 mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_SEARCH_RESULTS, bundle);
 
-                progressBar.setVisibility(View.VISIBLE);
+                mainBinding.progressBar.setVisibility(View.VISIBLE);
                 WLPreferences.saveStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory);
                 viewModel.setSearchingBy(checkedCategory);
                 viewModel.refresh();
