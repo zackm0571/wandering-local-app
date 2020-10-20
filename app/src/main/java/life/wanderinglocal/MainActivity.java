@@ -38,6 +38,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import java.util.List;
 
 import life.wanderinglocal.databinding.ActivityMainBinding;
+import life.wanderinglocal.databinding.SearchLayoutBinding;
 import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
@@ -45,11 +46,12 @@ import static life.wanderinglocal.Constants.PREF_LNG_KEY;
 
 public class MainActivity extends ComponentActivity {
     private static final int REQUEST_CODE = 71;
-
+    // Firebase
     private FirebaseAnalytics mFirebaseAnalytics;
-
+    // View binding
     private ActivityMainBinding mainBinding;
-
+    private SearchLayoutBinding searchBinding;
+    // Views + ViewModels
     private View searchView;
     private AlertDialog searchDialog;
     private WLTimeLineAdapter yelpAdapter;
@@ -304,8 +306,9 @@ public class MainActivity extends ComponentActivity {
     private View getSearchView() {
         if (searchView == null) {
             searchView = LayoutInflater.from(this).inflate(R.layout.search_layout, null);
-            searchView.findViewById(R.id.searchButton).setOnClickListener(view -> {
-                String checkedCategory = getCheckedCategory(searchView.findViewById(R.id.categoryChipGroup));
+            searchBinding = SearchLayoutBinding.bind(searchView);
+            searchBinding.searchButton.setOnClickListener(view -> {
+                String checkedCategory = getCheckedCategory(searchBinding.categoryChipGroup);
                 if (checkedCategory == null || checkedCategory.length() == 0) return;
                 Timber.d("Searching for %s", checkedCategory);
                 Bundle bundle = new Bundle();
