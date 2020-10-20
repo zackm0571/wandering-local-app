@@ -14,4 +14,5 @@
     <string name="business_address">Loading address…</string>
     <string name="banner_ad_unit_id">ca-app-pub-5508350934489373/5399873632</string>
     <string name="banner_ad_unit_id_test">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="empty_timeline_text">Sorry, we couldn\'t find anything. Check your connection, try again, or wander somewhere else :(</string>
 </resources>

@@ -116,6 +116,7 @@ public class MainActivity extends ComponentActivity {
             Timber.d("Timeline updated");
             yelpAdapter.setData(yelpData);
             mainBinding.progressBar.setVisibility(View.GONE);
+            mainBinding.errorText.setVisibility(yelpData.isEmpty() ? View.VISIBLE : View.GONE);
         });
         viewModel.getSearchingBy().observe(this, s -> {
             setTitle(getString(R.string.app_name) + " - " + s.getName());

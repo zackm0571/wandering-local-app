@@ -143,9 +143,9 @@ public class TimelineRepo {
                 }
                 Timber.d("Yelp search has returned %d results", results.size());
                 Collections.sort(results, (t1, t2) -> Double.compare(t2.getRating(), t1.getRating()));
+                data.postValue(results);
+                if (listener != null) listener.onDataLoaded();
                 if (results.size() > 0) {
-                    data.postValue(results);
-                    if (listener != null) listener.onDataLoaded();
                     persist(results);
                 }
             }

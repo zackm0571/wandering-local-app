@@ -27,6 +27,17 @@
         app:backgroundTint="@color/colorPrimary"
         app:rippleColor="@color/colorPrimary" />
 
+    <TextView
+        android:id="@+id/errorText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textStyle="bold"
+        android:layout_margin="10dp"
+        android:textSize="24sp"
+        android:visibility="gone"
+        android:text="@string/empty_timeline_text"/>
+
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
