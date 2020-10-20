@@ -166,11 +166,12 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         if (extras != null) {
             //todo: why is this always off by 1?
             mAppWidgetId = extras.getInt(
-                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) + 1;
         }
 
         // If this activity was started with an intent without an app widget ID, finish with an error.
-        if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+        int widgetId = Integer.parseInt(WLPreferences.loadStringPref(this, Constants.PREF_WIDGET_ID_KEY, Constants.DISABLED_WIDGET));
+        if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID || (mAppWidgetId != widgetId && widgetId != -1)) {
             finish();
         }
     }

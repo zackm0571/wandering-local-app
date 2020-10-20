@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import life.wanderinglocal.Constants;
 import life.wanderinglocal.R;
 import life.wanderinglocal.ServiceLocator;
 import life.wanderinglocal.TimelineRepo;
+import life.wanderinglocal.WLPreferences;
 import timber.log.Timber;
 
 /**
@@ -35,10 +37,25 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         this.context = context;
         // There may be multiple widgets active, so update all of them
         for (int appWidgetId : appWidgetIds) {
-            RemoteViews views = new RemoteViews(
-                    context.getPackageName(),
-                    R.layout.wandering_widget);
-            bindWidget(appWidgetManager, views, appWidgetId);
+            int widgetId = Integer.parseInt(WLPreferences.loadStringPref(context, Constants.PREF_WIDGET_ID_KEY, Constants.DISABLED_WIDGET));
+            if (widgetId == appWidgetId) {
+                RemoteViews views = new RemoteViews(
+                        context.getPackageName(),
+                        R.layout.wandering_widget);
+                bindWidget(appWidgetManager, views, appWidgetId);
+                return;
+                //Check if no widget is added then add widget and save widget ID to sharedPreferences
+            } else if (widgetId == -1) {
+                RemoteViews views = new RemoteViews(
+                        context.getPackageName(),
+                        R.layout.wandering_widget);
+                WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(appWidgetId));
+                bindWidget(appWidgetManager, views, appWidgetId);
+                return;
+            } else {
+                //Make toast to tell the user that only one widget is allowed
+                Toast.makeText(context, context.getResources().getString(R.string.only_one_widget_allowed), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -84,10 +101,10 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onDeleted(Context context, int[] appWidgetIds) {
         // When the user deletes the widget, delete the preference associated with it.
         this.context = context;
-        for(Integer id : appWidgetIds) {
+        for (Integer id : appWidgetIds) {
             WidgetSearchRepo.widgetIdRepoMap.remove(id);
         }
-
+        WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(-1));
     }
 
     @Override
@@ -101,6 +118,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
         this.context = context;
+        WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(-1));
     }
 
     @Override
@@ -126,15 +144,18 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, WanderingWidget.class));
             for (int appWidgetId : appWidgetIds) {
-                TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
-                if (repo == null) {
-                    repo = new TimelineRepo(context);
+                int widgetId = Integer.parseInt(WLPreferences.loadStringPref(context, Constants.PREF_WIDGET_ID_KEY, "-1"));
+                if (widgetId == appWidgetId) {
+                    TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
+                    if (repo == null) {
+                        repo = new TimelineRepo(context);
+                    }
+                    WidgetSearchRepo.widgetIdRepoMap.put(appWidgetId, repo);
+                    RemoteViews views = new RemoteViews(
+                            context.getPackageName(),
+                            R.layout.wandering_widget);
+                    bindWidget(appWidgetManager, views, appWidgetId);
                 }
-                WidgetSearchRepo.widgetIdRepoMap.put(appWidgetId, repo);
-                RemoteViews views = new RemoteViews(
-                        context.getPackageName(),
-                        R.layout.wandering_widget);
-                bindWidget(appWidgetManager, views, appWidgetId);
             }
         }
         super.onReceive(context, intent);
