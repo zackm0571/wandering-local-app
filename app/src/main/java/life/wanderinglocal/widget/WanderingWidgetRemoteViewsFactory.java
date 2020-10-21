@@ -164,7 +164,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         }
         String searchTerm = loadStringPref(context, Constants.PREF_CATEGORY_KEY + appWidgetId, Constants.DEFAULT_SEARCH_TERM);
 
-        Timber.d("Data persisted, loading from category: %s",searchTerm);
+        Timber.d("Data persisted, loading from category: %s", searchTerm);
         AsyncTask.execute(() -> liveData.postValue(db.dao().getDataWithParams(searchTerm, Constants.DEFAULT_MIN_RATING)));
 
     }

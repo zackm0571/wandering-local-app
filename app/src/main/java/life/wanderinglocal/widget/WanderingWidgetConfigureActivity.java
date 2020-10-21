@@ -1,7 +1,6 @@
 package life.wanderinglocal.widget;
 
 import android.Manifest;
-import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
@@ -19,8 +18,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -42,6 +39,7 @@ import life.wanderinglocal.LocationUtils;
 import life.wanderinglocal.R;
 import life.wanderinglocal.WLCategory;
 import life.wanderinglocal.WLPreferences;
+import life.wanderinglocal.databinding.WanderingWidgetConfigureBinding;
 import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.PREF_LAT_KEY;
@@ -53,17 +51,15 @@ import static life.wanderinglocal.WLPreferences.saveStringPref;
  * The configuration screen for the {@link WanderingWidget WanderingWidget} AppWidget.
  */
 public class WanderingWidgetConfigureActivity extends ComponentActivity {
+    WanderingWidgetConfigureBinding binding;
     private HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
     private CategoryRepo categoryRepo = new CategoryRepo();
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private EditText locationText, customSearchText;
-    private CheckBox useMyLocationCheckbox;
-    private ProgressBar progressBar;
     private LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
-            locationText.setText(cityState);
+            binding.locationText.setText(cityState);
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LOCATION_KEY, cityState);
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LAT_KEY, String.valueOf(location.getLatitude()));
             saveStringPref(WanderingWidgetConfigureActivity.this, PREF_LNG_KEY, String.valueOf(location.getLongitude()));
@@ -90,9 +86,9 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
             if (b) {
                 storeLastKnownLocation();
-                locationText.setEnabled(false);
+                binding.locationText.setEnabled(false);
             } else {
-                locationText.setEnabled(true);
+                binding.locationText.setEnabled(true);
             }
         }
     };
@@ -104,14 +100,14 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             // Try to use lat / lng if possible, fall back to city, state
             String lat = WLPreferences.loadStringPref(context, PREF_LAT_KEY);
             String lng = WLPreferences.loadStringPref(context, PREF_LNG_KEY);
-            String location = locationText.getText().toString();
+            String location = binding.locationText.getText().toString();
             saveStringPref(context, PREF_LOCATION_KEY, location);
 
             // Store selected category
             String category = getCheckedCategory(findViewById(R.id.categoryChipGroup));
             saveStringPref(context, Constants.PREF_CATEGORY_KEY + mAppWidgetId, category);
 
-            progressBar.setVisibility(View.VISIBLE);
+            binding.progressBar.setVisibility(View.VISIBLE);
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -146,27 +142,22 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
 
-        setContentView(R.layout.wandering_widget_configure);
-        findViewById(R.id.add_button).setOnClickListener(mOnClickListener);
-
-        locationText = findViewById(R.id.location_text);
-        locationText.setText(WLPreferences.loadStringPref(this, PREF_LOCATION_KEY));
-
-        customSearchText = findViewById(R.id.custom_search_text);
-
+        binding = WanderingWidgetConfigureBinding.inflate(getLayoutInflater());
+        binding.addButton.setOnClickListener(mOnClickListener);
+        binding.locationText.setText(WLPreferences.loadStringPref(this, PREF_LOCATION_KEY));
         categoryRepo.getCategories().observe(this, this::initSearchUI);
+        binding.useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
+        binding.useMyLocationCheckbox.setChecked(true);
 
-        useMyLocationCheckbox = findViewById(R.id.useMyLocation_checkbox);
-        useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
+        setContentView(binding.getRoot());
 
-        progressBar = findViewById(R.id.progress_bar);
         // Find the widget id from the intent.
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if (extras != null) {
             //todo: why is this always off by 1?
             mAppWidgetId = extras.getInt(
-                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) + 1;
+                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
         // If this activity was started with an intent without an app widget ID, finish with an error.
@@ -266,7 +257,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         Location bestLocation = null;
         for (String provider : providers) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                Log.d(getClass().getSimpleName(), "Requesting location permissions");
+                Timber.d("Requesting location permissions");
                 ActivityCompat.requestPermissions(this, Constants.PERMISSIONS, Constants.PERMISSION_REQUEST_CODE);
                 return null;
             }
@@ -303,7 +294,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, locationListener, handlerThread.getLooper());
             locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, handlerThread.getLooper());
         } else {
-            locationText.setText(cityState);
+            binding.locationText.setText(cityState);
 
             // Try to use lat / lng if possible, fall back to city, state
             String lat = String.valueOf(location.getLatitude());
