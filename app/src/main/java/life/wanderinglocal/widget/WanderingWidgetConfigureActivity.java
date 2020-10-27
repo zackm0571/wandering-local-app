@@ -12,12 +12,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -53,9 +49,10 @@ import static life.wanderinglocal.WLPreferences.saveStringPref;
 public class WanderingWidgetConfigureActivity extends ComponentActivity {
     WanderingWidgetConfigureBinding binding;
     private HandlerThread handlerThread = new HandlerThread(getClass().getSimpleName() + "_" + "thread");
+    private Handler handler = new Handler();
     private CategoryRepo categoryRepo = new CategoryRepo();
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    private LocationListener locationListener = new LocationListener() {
+    private final LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             String cityState = LocationUtils.getCityStateFormattedStringFromLocation(WanderingWidgetConfigureActivity.this, location);
@@ -81,7 +78,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
 
         }
     };
-    CompoundButton.OnCheckedChangeListener useMyLocationClickListener = new CompoundButton.OnCheckedChangeListener() {
+    private final CompoundButton.OnCheckedChangeListener useMyLocationClickListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
             if (b) {
@@ -93,7 +90,7 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         }
     };
 
-    View.OnClickListener mOnClickListener = new View.OnClickListener() {
+    View.OnClickListener submitOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = WanderingWidgetConfigureActivity.this;
 
@@ -108,24 +105,21 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
             saveStringPref(context, Constants.PREF_CATEGORY_KEY + mAppWidgetId, category);
 
             binding.progressBar.setVisibility(View.VISIBLE);
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // Refresh the widget
-                    Timber.d("Configuring Widget: widgetId = %d, category = %s, location = %s, lat = %s, lng = %s", mAppWidgetId, category, location, lat, lng);
-                    Intent refreshIntent = new Intent(context, WanderingWidget.class);
-                    refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
-                    refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                    sendBroadcast(refreshIntent);
+            handler.postDelayed(() -> {
+                // Refresh the widget
+                Timber.d("Configuring Widget: widgetId = %d, category = %s, location = %s, lat = %s, lng = %s", mAppWidgetId, category, location, lat, lng);
+                Intent refreshIntent = new Intent(context, WanderingWidget.class);
+                refreshIntent.setAction(Constants.WL_ACTION_WIDGET_CLICK);
+                refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                sendBroadcast(refreshIntent);
 
-                    // Make sure we pass back the original appWidgetId
-                    Intent resultValue = new Intent();
-                    resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
-                    setResult(RESULT_OK, resultValue);
+                // Make sure we pass back the original appWidgetId
+                Intent resultValue = new Intent();
+                resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                setResult(RESULT_OK, resultValue);
 
-                    WanderingWidget.sendRefreshBroadcast(WanderingWidgetConfigureActivity.this);
-                    finish();
-                }
+                WanderingWidget.sendRefreshBroadcast(WanderingWidgetConfigureActivity.this);
+                finish();
             }, new Random().nextLong() % 1000 + 200);
         }
     };
@@ -142,15 +136,6 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
 
-        binding = WanderingWidgetConfigureBinding.inflate(getLayoutInflater());
-        binding.addButton.setOnClickListener(mOnClickListener);
-        binding.locationText.setText(WLPreferences.loadStringPref(this, PREF_LOCATION_KEY));
-        categoryRepo.getCategories().observe(this, this::initSearchUI);
-        binding.useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
-        binding.useMyLocationCheckbox.setChecked(true);
-
-        setContentView(binding.getRoot());
-
         // Find the widget id from the intent.
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
@@ -163,8 +148,18 @@ public class WanderingWidgetConfigureActivity extends ComponentActivity {
         // If this activity was started with an intent without an app widget ID, finish with an error.
         int widgetId = Integer.parseInt(WLPreferences.loadStringPref(this, Constants.PREF_WIDGET_ID_KEY, Constants.DISABLED_WIDGET));
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID || (mAppWidgetId != widgetId && widgetId != -1)) {
+            Timber.w("Invalid widgetId, found: %d, expected: %d", mAppWidgetId, widgetId);
             finish();
         }
+
+        binding = WanderingWidgetConfigureBinding.inflate(getLayoutInflater());
+        binding.addButton.setOnClickListener(submitOnClickListener);
+        binding.locationText.setText(WLPreferences.loadStringPref(this, PREF_LOCATION_KEY));
+        categoryRepo.getCategories().observe(this, this::initSearchUI);
+        binding.useMyLocationCheckbox.setOnCheckedChangeListener(useMyLocationClickListener);
+        binding.useMyLocationCheckbox.setChecked(true);
+
+        setContentView(binding.getRoot());
     }
 
     /**

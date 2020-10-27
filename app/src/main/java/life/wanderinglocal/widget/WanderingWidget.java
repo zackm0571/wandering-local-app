@@ -6,10 +6,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -30,6 +27,7 @@ import timber.log.Timber;
  */
 public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.Listener {
     private Context context;
+    private Map<Integer, RemoteViews> widgetIdToRemoteView = new HashMap<>();
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -39,9 +37,10 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         for (int appWidgetId : appWidgetIds) {
             int widgetId = Integer.parseInt(WLPreferences.loadStringPref(context, Constants.PREF_WIDGET_ID_KEY, Constants.DISABLED_WIDGET));
             if (widgetId == appWidgetId) {
-                RemoteViews views = new RemoteViews(
+                RemoteViews views = widgetIdToRemoteView.containsKey(widgetId) ? widgetIdToRemoteView.get(widgetId) : new RemoteViews(
                         context.getPackageName(),
                         R.layout.wandering_widget);
+                widgetIdToRemoteView.put(widgetId, views);
                 bindWidget(appWidgetManager, views, appWidgetId);
                 return;
                 //Check if no widget is added then add widget and save widget ID to sharedPreferences
@@ -49,6 +48,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
                 RemoteViews views = new RemoteViews(
                         context.getPackageName(),
                         R.layout.wandering_widget);
+                widgetIdToRemoteView.put(appWidgetId, views);
                 WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(appWidgetId));
                 bindWidget(appWidgetManager, views, appWidgetId);
                 return;
@@ -60,24 +60,22 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     }
 
     private void bindWidget(AppWidgetManager appWidgetManager, RemoteViews views, int appWidgetId) {
-        Timber.d("bindWidget()");
+        Timber.d("bindWidget(), id = %d", appWidgetId);
         // Init repo
         TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
         if (repo == null) {
             repo = new TimelineRepo(context);
         }
-        String lat = getStringPreference(Constants.PREF_LAT_KEY),
-                lng = getStringPreference(Constants.PREF_LNG_KEY);
+        String lat = WLPreferences.loadStringPref(context, Constants.PREF_LAT_KEY, ""),
+                lng = WLPreferences.loadStringPref(context, Constants.PREF_LNG_KEY, "");
         if (!lat.isEmpty() && !lng.isEmpty()) {
             repo.setLocation(lat, lng);
         } else {
-            repo.setLocation(getStringPreference(Constants.PREF_LOCATION_KEY));
+            repo.setLocation(WLPreferences.loadStringPref(context, Constants.PREF_LOCATION_KEY, ""));
         }
-        repo.setSearchBy(getStringPreference(Constants.PREF_CATEGORY_KEY + appWidgetId));
-        repo.search();
+        repo.setSearchBy(WLPreferences.loadStringPref(context, Constants.PREF_CATEGORY_KEY + appWidgetId, ""));
         WidgetSearchRepo.widgetIdRepoMap.put(appWidgetId, repo);
-        appWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, new ComponentName(context, WanderingWidget.class));
-        Timber.d("Binding app widget id: %s", appWidgetId);
+//        appWidgetManager.bindAppWidgetIdIfAllowed(appWidgetId, new ComponentName(context, WanderingWidget.class));
         // Bind views
         Intent intent = new Intent(context, WanderingWidgetRemoteViewsService.class);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
@@ -91,20 +89,28 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         // Open settings activity
         Intent configurationIntent = new Intent(context, WanderingWidgetConfigureActivity.class);
         configurationIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        configurationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         views.setOnClickPendingIntent(R.id.settingsButton, PendingIntent.getActivity(context, 0, configurationIntent, 0));
         // Update the widget / adapter
         appWidgetManager.updateAppWidget(appWidgetId, views);
         appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.widgetList);
+        repo.search();
     }
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
+        Timber.d("onDeleted()");
         // When the user deletes the widget, delete the preference associated with it.
         this.context = context;
+        int cachedId = Integer.parseInt(WLPreferences.loadStringPref(context, Constants.PREF_WIDGET_ID_KEY));
         for (Integer id : appWidgetIds) {
             WidgetSearchRepo.widgetIdRepoMap.remove(id);
+            widgetIdToRemoteView.remove(id);
+            if(cachedId == id) {
+                Timber.d("Deleted widget id: %d", id);
+                WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(-1));
+            }
         }
-        WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(-1));
     }
 
     @Override
@@ -118,7 +124,6 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
         this.context = context;
-        WLPreferences.saveStringPref(context, Constants.PREF_WIDGET_ID_KEY, String.valueOf(-1));
     }
 
     @Override
@@ -166,12 +171,6 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         intent.setComponent(new ComponentName(context, WanderingWidget.class));
         intent.setComponent(new ComponentName(context, WanderingWidgetRemoteViewsFactory.class));
         context.sendBroadcast(intent);
-    }
-
-    //todo: access shared prefs from helper
-    private String getStringPreference(String key) {
-        SharedPreferences prefs = context.getSharedPreferences(Constants.PREFS_NAME, 0);
-        return prefs.getString(key, "");
     }
 
     @Override
