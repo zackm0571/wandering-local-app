@@ -67,21 +67,18 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         final WLTimelineEntry timelineEntry = data.get(position);
         holder.businessNameTextView.setText(timelineEntry.getBusinessName());
         holder.businessAddressTextView.setText(timelineEntry.getLocationString());
-        holder.businessAddressTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Uri locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + timelineEntry.getLocationString()));
-                Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
-                context.startActivity(intent);
-            }
+        holder.businessAddressTextView.setOnClickListener(view -> {
+            Uri locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + timelineEntry.getLocationString()));
+            Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
+            context.startActivity(intent);
         });
-        holder.imgView.setImageBitmap(timelineEntry.getBmp());
+        holder.imgView.setImageBitmap(timelineEntry.bmp);
 
         ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
         params.height = getDisplayHeight() / 3;
         params.width = getDisplayHeight() / 3;
         holder.imgView.setLayoutParams(params);
-        Glide.with(context).load(timelineEntry.getImageUrl())
+        Glide.with(context).load(timelineEntry.imageUrl)
                 .transition(withCrossFade())
                 .centerCrop()
                         .skipMemoryCache(true)
@@ -91,9 +88,9 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
         holder.ratingBar.setNumStars(5);
         holder.ratingBar.setRating((float) timelineEntry.getRating());
         holder.itemView.setOnClickListener(view -> {
-            if (timelineEntry.getYelpUrl() == null) return;
+            if (timelineEntry.yelpUrl == null) return;
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(timelineEntry.getYelpUrl()));
+            intent.setData(Uri.parse(timelineEntry.yelpUrl));
             context.startActivity(intent);
         });
     }

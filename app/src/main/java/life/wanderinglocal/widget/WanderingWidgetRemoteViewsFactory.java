@@ -92,8 +92,8 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
             }
             if (liveData.getValue() != null && liveData.getValue().size() > 0) {
                 int count = 0;
-                for (WLTimelineEntry yd : liveData.getValue()) {
-                    if (yd.getBmp() != null) {
+                for (WLTimelineEntry entry : liveData.getValue()) {
+                    if (entry.bmp != null) {
                         count++;
                     }
                 }
@@ -113,18 +113,18 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         if (i == AdapterView.INVALID_POSITION || liveData.getValue() == null || liveData.getValue().size() == 0 || i >= liveData.getValue().size())
             return null;
 
-        WLTimelineEntry yd = liveData.getValue().get(i);
+        WLTimelineEntry entry = liveData.getValue().get(i);
         final RemoteViews rv = new RemoteViews(context.getPackageName(), R.layout.yelp_business_row_widget);
-        rv.setTextViewText(R.id.businessName, yd.getBusinessName());
+        rv.setTextViewText(R.id.businessName, entry.getBusinessName());
         rv.setTextViewText(R.id.businessRatingText, String.format(Locale.getDefault(),
-                "%.2f stars", yd.getRating()));
-        if (yd.getBmp() != null) {
-            rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+                "%.2f stars", entry.getRating()));
+        if (entry.getBmp() != null) {
+            rv.setImageViewBitmap(R.id.businessImg, entry.getBmp());
         } else {
             final AtomicBoolean isWaiting = new AtomicBoolean();
             isWaiting.set(true);
             Request request = new Request.Builder()
-                    .url(yd.getImageUrl())
+                    .url(entry.getImageUrl())
                     .build();
 
             client.newCall(request).enqueue(new Callback() {
@@ -139,7 +139,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                     byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
                     Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
                     if (bmp != null) {
-                        yd.setBmp(bmp);
+                        entry.bmp = bmp;
                         isWaiting.set(false);
                     }
                 }
@@ -151,7 +151,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                rv.setImageViewBitmap(R.id.businessImg, yd.getBmp());
+                rv.setImageViewBitmap(R.id.businessImg, entry.getBmp());
             }
         }
         return rv;
@@ -166,7 +166,6 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
 
         Timber.d("Data persisted, loading from category: %s", searchTerm);
         AsyncTask.execute(() -> liveData.postValue(db.dao().getDataWithParams(searchTerm, Constants.DEFAULT_MIN_RATING)));
-
     }
 
     @Override
