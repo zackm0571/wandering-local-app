@@ -12,11 +12,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
-import androidx.activity.ComponentActivity
+import androidx.activity.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.*
@@ -51,7 +50,7 @@ class MainActivity : ComponentActivity() {
         }
     private var searchDialog: AlertDialog? = null
     private var yelpAdapter: WLTimeLineAdapter? = null
-    private var viewModel: MainViewModel? = null
+    private val viewModel: MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initFirebase()
@@ -92,26 +91,29 @@ class MainActivity : ComponentActivity() {
 
     private fun initViewModel() {
         Timber.d("Initializing view model...")
-        viewModel = ViewModelProvider(viewModelStore, ViewModelProvider.AndroidViewModelFactory.getInstance(application)).get(MainViewModel::class.java)
-        viewModel!!.initializeRepo(this)
-        viewModel!!.setSearchingBy(WLPreferences.loadStringPref(this, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
+        with(viewModel){
+            initializeRepo(this@MainActivity)
+            setSearchingBy(WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
+            timeline?.observe(this@MainActivity, Observer { yelpData: List<WLTimelineEntry>? ->
+                Timber.d("Timeline updated")
+                yelpData?.let {
+                    yelpAdapter?.setData(yelpData)
+                    mainBinding?.progressBar?.visibility = View.GONE
+                    mainBinding?.errorText?.visibility = if (yelpData.isEmpty()) View.VISIBLE else View.GONE
+                }
+            })
+            searchingBy?.observe(this@MainActivity, Observer { s: WLCategory -> title = getString(R.string.app_name) + " - " + s.name })
+            categories.observe(this@MainActivity, Observer { categories: List<WLCategory> -> initSearchUI(categories) })
+        }
         val bundle = Bundle()
         bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM,
-                viewModel!!.searchingBy.value!!.name)
+                viewModel.searchingBy?.value!!.name)
         mFirebaseAnalytics!!.logEvent(FirebaseAnalytics.Event.APP_OPEN, bundle)
-        viewModel!!.timeline.observe(this, Observer { yelpData: List<WLTimelineEntry?> ->
-            Timber.d("Timeline updated")
-            yelpAdapter!!.setData(yelpData)
-            mainBinding!!.progressBar.visibility = View.GONE
-            mainBinding!!.errorText.visibility = if (yelpData.isEmpty()) View.VISIBLE else View.GONE
-        })
-        viewModel!!.searchingBy.observe(this, Observer { s: WLCategory -> title = getString(R.string.app_name) + " - " + s.name })
-        viewModel!!.categories.observe(this, Observer { categories: List<WLCategory> -> initSearchUI(categories) })
         // Try to use last lat / lng if possible.
         val lat = WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAT_KEY, null)
         val lng = WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LNG_KEY, null)
         if (lat != null && lng != null) {
-            viewModel!!.setLocation(lat, lng)
+            viewModel.setLocation(lat, lng)
         }
     }
 

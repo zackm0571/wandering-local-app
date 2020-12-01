@@ -72,7 +72,7 @@ public class WLTimeLineAdapter extends RecyclerView.Adapter<WLTimeLineAdapter.Ye
             Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
             context.startActivity(intent);
         });
-        holder.imgView.setImageBitmap(timelineEntry.bmp);
+        holder.imgView.setImageBitmap(timelineEntry.getBmp());
 
         ViewGroup.LayoutParams params = holder.imgView.getLayoutParams();
         params.height = getDisplayHeight() / 3;

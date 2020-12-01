@@ -93,7 +93,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
             if (liveData.getValue() != null && liveData.getValue().size() > 0) {
                 int count = 0;
                 for (WLTimelineEntry entry : liveData.getValue()) {
-                    if (entry.bmp != null) {
+                    if (entry.getBmp() != null) {
                         count++;
                     }
                 }
@@ -139,7 +139,7 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
                     byte[] img = IOUtils.byteArrFromInputStream(response.body().byteStream());
                     Bitmap bmp = BitmapFactory.decodeByteArray(img, 0, img.length);
                     if (bmp != null) {
-                        entry.bmp = bmp;
+                        entry.setBmp(bmp);
                         isWaiting.set(false);
                     }
                 }

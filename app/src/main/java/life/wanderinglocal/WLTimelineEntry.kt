@@ -29,7 +29,7 @@ class WLTimelineEntry {
     }
 
     @Ignore
-    lateinit var bmp: Bitmap
+    var bmp: Bitmap? = null
 
     @PrimaryKey
     var businessName : String = ""
