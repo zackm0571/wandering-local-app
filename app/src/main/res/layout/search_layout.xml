@@ -38,6 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="8dp"
+            android:textColor="@android:color/white"
             android:text="@string/search" />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -13,6 +13,8 @@ object Constants {
     const val PREF_LAST_SEARCHED_CATEGORY_KEY = "last_category_"
     const val PREF_WIDGET_ID_KEY = "widgetId"
 
+    // Fragments
+    const val TIMELINE_FRAGMENT_TAG = "TimelineFragment"
     // Defaults
     @JvmField
     val DEFAULT_SEARCH_CATEGORIES = arrayOf("American", "Bars", "Breweries", "Breakfast", "British", "Burmese", "Burgers", "Chinese", "Food Trucks", "Farmer's Market", "Coffee", "Dessert", "Ethiopian", "Indian", "Jamaican", "Mexican", "Ramen", "Spanish", "Sushi", "Wings")

@@ -5,10 +5,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class MainViewModel : ViewModel() {
+class TimelineViewModel : ViewModel() {
     private var repo: TimelineRepo? = null
     private var categoryRepo: CategoryRepo? = null
     private var data: MutableLiveData<List<WLTimelineEntry>?>? = null
+    private var selected: MutableLiveData<WLTimelineEntry?> = MutableLiveData()
     var searchingBy: MutableLiveData<WLCategory>? = null
         get() {
             field = repo?.searchingBy
@@ -17,9 +18,15 @@ class MainViewModel : ViewModel() {
         private set
 
     fun initializeRepo(context: Context?) {
-        repo = TimelineRepo(context)
-        categoryRepo = CategoryRepo()
-        data = repo?.search()
+        if (repo == null) {
+            repo = TimelineRepo(context)
+        }
+        if (categoryRepo == null) {
+            categoryRepo = CategoryRepo()
+        }
+        if (data == null) {
+            data = repo?.search()
+        }
     }
 
     val timeline: LiveData<List<WLTimelineEntry>?>?
