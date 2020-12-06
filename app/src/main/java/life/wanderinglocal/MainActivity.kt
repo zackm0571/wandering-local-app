@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
 
     fun initViewModel() {
         viewModel.initializeRepo(this@MainActivity)
+        viewModel.searchingBy?.value = WLCategory(WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
         viewModel.searchingBy?.observe(this@MainActivity, Observer { s: WLCategory ->
             supportActionBar?.title = getString(R.string.app_name) + " - " + s.name
         })
