@@ -15,6 +15,8 @@ object Constants {
 
     // Fragments
     const val TIMELINE_FRAGMENT_TAG = "TimelineFragment"
+    const val TIMELINE_DETAIL_FRAGMENT_TAG = "TimelineDetailFragment"
+
     // Defaults
     @JvmField
     val DEFAULT_SEARCH_CATEGORIES = arrayOf("American", "Bars", "Breweries", "Breakfast", "British", "Burmese", "Burgers", "Chinese", "Food Trucks", "Farmer's Market", "Coffee", "Dessert", "Ethiopian", "Indian", "Jamaican", "Mexican", "Ramen", "Spanish", "Sushi", "Wings")

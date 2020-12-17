@@ -16,7 +16,7 @@ class WLTimelineEntry {
         val all: List<WLTimelineEntry?>?
 
         @Query("SELECT * FROM timelineEntries WHERE searchTerm = :searchTerm AND rating > :rating LIMIT 10")
-        fun getDataWithParams(searchTerm: String?, rating: Double): List<WLTimelineEntry?>?
+        fun getDataWithParams(searchTerm: String?, rating: Double): List<WLTimelineEntry>?
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun addEntries(data: List<WLTimelineEntry?>?)

@@ -10,6 +10,8 @@ import android.view.Window
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.add
+import androidx.fragment.app.commit
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -57,7 +59,14 @@ class TimelineFragment : Fragment() {
         Timber.d("Initializing RecyclerView...")
         timelineAdapter = context?.let { WLTimeLineAdapter(it) }
         timelineAdapter?.itemClickedSubject?.subscribe(Consumer {
+            parentFragmentManager.commit {
+                parentFragmentManager.findFragmentByTag(Constants.TIMELINE_FRAGMENT_TAG)?.let {
+                    hide(it)
+                }
 
+                add<EntryDetailFragment>(R.id.fragment_container, Constants.TIMELINE_DETAIL_FRAGMENT_TAG)
+                addToBackStack(Constants.TIMELINE_FRAGMENT_TAG)
+            }
         })
         binding.recyclerView.adapter = timelineAdapter
         binding.recyclerView.layoutManager = GridLayoutManager(context, 2)
@@ -84,7 +93,7 @@ class TimelineFragment : Fragment() {
         }
 
         with(viewModel) {
-            initializeRepo(context)
+            context?.let { initializeRepo(it) }
             setSearchingBy(WLPreferences.loadStringPref(context, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, life.wanderinglocal.Constants.DEFAULT_SEARCH_TERM))
             timeline?.observe(viewLifecycleOwner, Observer { yelpData: List<WLTimelineEntry>? ->
                 Timber.d("Timeline updated")

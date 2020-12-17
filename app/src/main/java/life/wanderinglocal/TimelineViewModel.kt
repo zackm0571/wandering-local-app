@@ -6,27 +6,19 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class TimelineViewModel : ViewModel() {
-    private var repo: TimelineRepo? = null
+    private lateinit var repo: TimelineRepo
     private var categoryRepo: CategoryRepo? = null
     private var data: MutableLiveData<List<WLTimelineEntry>?>? = null
-    private var selected: MutableLiveData<WLTimelineEntry?> = MutableLiveData()
-    var searchingBy: MutableLiveData<WLCategory>? = null
-        get() {
-            field = repo?.searchingBy
-            return field
-        }
-        private set
+    var selected: MutableLiveData<WLTimelineEntry?> = MutableLiveData()
+    lateinit var searchingBy: MutableLiveData<WLCategory>
 
-    fun initializeRepo(context: Context?) {
-        if (repo == null) {
-            repo = TimelineRepo(context)
-        }
+    fun initializeRepo(context: Context) {
+        repo = TimelineRepo(context)
+        searchingBy = repo.getSearchingBy()
         if (categoryRepo == null) {
             categoryRepo = CategoryRepo()
         }
-        if (data == null) {
-            data = repo?.search()
-        }
+        data = repo.search()
     }
 
     val timeline: LiveData<List<WLTimelineEntry>?>?
