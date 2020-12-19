@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.fragment.app.replace
+import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
 import life.wanderinglocal.Constants
 import life.wanderinglocal.R
@@ -26,10 +27,10 @@ class EntryDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.selected.value?.let {
-            binding.titleDetail.text = it.businessName
-            context?.let { it1 -> Glide.with(it1).load(it.imageUrl).into(binding.logoDetail) }
-        }
+        viewModel.selected.observe(viewLifecycleOwner, Observer {
+            binding.titleDetail.text = it?.businessName
+            context?.let { it1 -> Glide.with(it1).load(it?.imageUrl).into(binding.logoDetail) }
+        })
         binding.backButton.setOnClickListener {
             parentFragmentManager.commit {
                 replace<TimelineFragment>(R.id.fragment_container, Constants.TIMELINE_FRAGMENT_TAG)

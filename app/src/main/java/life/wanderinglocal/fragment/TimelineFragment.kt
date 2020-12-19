@@ -66,6 +66,7 @@ class TimelineFragment : Fragment() {
 
                 add<EntryDetailFragment>(R.id.fragment_container, Constants.TIMELINE_DETAIL_FRAGMENT_TAG)
                 addToBackStack(Constants.TIMELINE_FRAGMENT_TAG)
+                viewModel.selected.value = it
             }
         })
         binding.recyclerView.adapter = timelineAdapter

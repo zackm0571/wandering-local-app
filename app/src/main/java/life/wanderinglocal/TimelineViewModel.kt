@@ -29,7 +29,7 @@ class TimelineViewModel : ViewModel() {
     }
 
     fun setLocation(lat: String?, lng: String?) {
-        repo?.setLocation(lat, lng)
+        repo.setLocation(lat, lng)
     }
 
     /**

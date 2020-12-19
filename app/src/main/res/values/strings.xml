@@ -16,4 +16,5 @@
     <string name="banner_ad_unit_id_test">ca-app-pub-3940256099942544/6300978111</string>
     <string name="empty_timeline_text">Sorry, we couldn\'t find anything. Check your connection, try again, or wander somewhere else :(</string>
     <string name="only_one_widget_allowed">Sorry, only one instance of this widget is allowed at a time.</string>
+    <string name="logo_cd">%s Logo</string>
 </resources>
