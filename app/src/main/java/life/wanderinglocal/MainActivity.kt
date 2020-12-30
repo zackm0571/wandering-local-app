@@ -45,18 +45,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         initFirebase()
         initViewModel()
+        initLocationServices()
         initUI()
         setContentView(mainBinding?.root)
         supportFragmentManager.commit {
             replace<TimelineFragment>(R.id.fragment_container, Constants.TIMELINE_FRAGMENT_TAG)
         }
-        initLocationServices()
+        viewModel.refresh()
     }
 
     fun initViewModel() {
-        viewModel.initializeRepo(this@MainActivity)
-        viewModel.searchingBy?.value = WLCategory(WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
-        viewModel.searchingBy?.observe(this@MainActivity, Observer { s: WLCategory ->
+        viewModel.searchingBy.value = WLCategory(WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
+        viewModel.searchingBy.observe(this@MainActivity, Observer { s: WLCategory ->
             supportActionBar?.title = getString(R.string.app_name) + " - " + s.name
         })
     }
@@ -92,10 +92,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val location = getLastKnownLocation(locationManager)
-        if (location != null) {
-            viewModel.setLocation(location.latitude.toString(), location.longitude.toString())
-            viewModel.refresh()
+        getLastKnownLocation(locationManager)?.let {
+            viewModel.setLocation(it.latitude, it.longitude)
         }
     }
 

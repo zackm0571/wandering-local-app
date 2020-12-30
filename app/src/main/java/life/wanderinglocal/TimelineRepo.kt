@@ -19,7 +19,7 @@ import java.util.*
  * This repo populates the timeline from a variety of different data sources.
  * Todo: Ads, Google Places API, WanderingLocal API, limit by distance, change sorting parameters.
  */
-class TimelineRepo(private val context: Context) {
+class TimelineRepo() {
     private val yelpApi: YelpApi
 
     private var data: MutableLiveData<List<WLTimelineEntry>?> = MutableLiveData()
@@ -54,7 +54,7 @@ class TimelineRepo(private val context: Context) {
         return lng!!
     }
 
-    fun setLocation(lat: String?, lng: String?) {
+    fun setLocation(lat: String, lng: String) {
         this.lat = lat
         this.lng = lng
     }
@@ -90,50 +90,35 @@ class TimelineRepo(private val context: Context) {
 
     private fun search(builder: SearchBuilder): MutableLiveData<List<WLTimelineEntry>?> {
         Timber.d("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", location, getLat(), getLng(), getSearchingBy().value.toString())
-        if (getLat().length == 0 && getLng().length == 0 && location!!.length == 0) return data
+        if ((getLat().isEmpty() || getLng().isEmpty()) && location!!.isEmpty()) return data
         yelpApi.search(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
                 val searchResponse = response.body()
-                searchResponse?.businesses?.let {
-                    val results: MutableList<WLTimelineEntry?> = ArrayList()
-                    for (b in it) {
+                searchResponse?.businesses?.let { it ->
+                    val results: ArrayList<WLTimelineEntry?> = ArrayList()
+                    for (i in 0 until it.size) {
+                        val b = it[i]
                         val data = WLTimelineEntry()
                         data.businessName = b.name
                         data.imageUrl = b.imageUrl
                         data.yelpUrl = b.url
                         data.rating = b.rating
                         data.searchTerm = getSearchingBy().value!!.name //todo update db to include serialized WLCategory
+                        data.description = b.text ?: ""
                         data.location = b.location
                         data.distance = b.distance
                         results.add(data)
                     }
-                    Timber.d("Yelp search has returned %d results", results.size)
+                    Timber.d("Yelp search has returned ${results.size} results")
                     results.sortBy {
                         it?.rating
                     }
                     data.postValue(results as List<WLTimelineEntry>)
-                    if (listener != null) listener!!.onDataLoaded()
-                    if (results.size > 0) {
-                        persist(results)
-                    }
-
                 }
             }
 
             override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
                 Timber.e(call.request().toString())
-                //todo replace with coroutine
-                AsyncTask.execute {
-                    if (db != null) {
-                        val cached = db?.dao()?.getDataWithParams(getSearchingBy().value!!.name, MIN_RATING)
-                        if (cached!!.size > 0) {
-                            cached.sortedBy {
-                                it?.rating
-                            }
-                            data.postValue(cached as List<WLTimelineEntry>)
-                        }
-                    }
-                }
             }
         }, builder)
         return data
@@ -160,7 +145,7 @@ class TimelineRepo(private val context: Context) {
         Timber.d("loadCached")
         val searchTerm = getSearchingBy().value?.name
         AsyncTask.execute {
-            val cached : List<WLTimelineEntry>? = db!!.dao().getDataWithParams(searchTerm, MIN_RATING)
+            val cached: List<WLTimelineEntry>? = db!!.dao().getDataWithParams(searchTerm, MIN_RATING)
             if (cached != null && cached.size > 0 && (data.value == null || data.value!!.isEmpty())) {
                 handler.post {
                     cached.sortedBy {
@@ -178,11 +163,11 @@ class TimelineRepo(private val context: Context) {
 
     init {
         yelpApi = YelpApi()
-        db = if (ServiceLocator.getDb() == null) {
-            ServiceLocator.buildDb(context)
-        } else {
-            ServiceLocator.getDb()
-        }
-        loadCached()
+//        db = if (ServiceLocator.getDb() == null) {
+//            ServiceLocator.buildDb(context)
+//        } else {
+//            ServiceLocator.getDb()
+//        }
+//        loadCached()
     }
 }

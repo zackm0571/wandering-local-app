@@ -28,6 +28,9 @@ class WLTimelineEntry {
         fun deleteEntries()
     }
 
+    @ColumnInfo(name = "description")
+    lateinit var description: String
+
     @Ignore
     var bmp: Bitmap? = null
 

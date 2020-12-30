@@ -10,6 +10,7 @@ import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
+import timber.log.Timber;
 
 import static life.wanderinglocal.Constants.DEFAULT_SEARCH_RADIUS;
 import static life.wanderinglocal.Constants.SEARCH_BY_OPEN_NOW;
@@ -79,6 +80,9 @@ public class YelpApi {
             map.put(PARAM_SORT_BY, SORT_RATING);
             map.put(PARAM_OPEN_NOW, String.valueOf(SEARCH_BY_OPEN_NOW));
             map.put(PARAM_SEARCH_RADIUS, String.valueOf(DEFAULT_SEARCH_RADIUS));
+            if (!map.containsKey(PARAM_LATITUDE) || !map.containsKey(PARAM_LONGITUDE)) {
+                Timber.e("Failed to set location");
+            }
             return map;
         }
     }

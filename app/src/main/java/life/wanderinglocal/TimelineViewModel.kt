@@ -6,29 +6,20 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
 class TimelineViewModel : ViewModel() {
-    private lateinit var repo: TimelineRepo
-    private var categoryRepo: CategoryRepo? = null
-    private var data: MutableLiveData<List<WLTimelineEntry>?>? = null
-    var selected: MutableLiveData<WLTimelineEntry?> = MutableLiveData()
-    lateinit var searchingBy: MutableLiveData<WLCategory>
+    private val repo: TimelineRepo = TimelineRepo()
+    private val categoryRepo: CategoryRepo = CategoryRepo()
+    var timeline: MutableLiveData<List<WLTimelineEntry>?> = repo.search()
+    val selected: MutableLiveData<WLTimelineEntry?> = MutableLiveData()
+    val location: MutableLiveData<Location?> = MutableLiveData()
+    val searchingBy: MutableLiveData<WLCategory> = MutableLiveData()
 
-    fun initializeRepo(context: Context) {
-        repo = TimelineRepo(context)
-        searchingBy = repo.getSearchingBy()
-        if (categoryRepo == null) {
-            categoryRepo = CategoryRepo()
-        }
-        data = repo.search()
+    fun setLocation(lat: Double, lng: Double) {
+        location.value = Location(lat, lng)
+        repo.setLocation(lat.toString(), lng.toString())
     }
 
-    val timeline: LiveData<List<WLTimelineEntry>?>?
-        get() = data
-
-    fun setLocation(location: String?) {
-        repo?.location = location
-    }
-
-    fun setLocation(lat: String?, lng: String?) {
+    fun setLocation(lat: String, lng: String) {
+        location.value = Location(lat.toDouble(), lng.toDouble())
         repo.setLocation(lat, lng)
     }
 
@@ -41,22 +32,19 @@ class TimelineViewModel : ViewModel() {
      * @param category [WLCategory] containing the search string [WLCategory] containing the search string
      */
     fun setSearchingBy(category: WLCategory?) {
-        repo?.setSearchBy(category!!)
+        searchingBy.value = category
+        repo.setSearchBy(category!!)
     }
 
-    fun setSearchingBy(s: String?) {
-        repo?.setSearchBy(WLCategory(s!!))
+    fun setSearchingBy(s: String) {
+        searchingBy.value = WLCategory(s)
+        repo.setSearchBy(WLCategory(s))
     }
 
     val categories: MutableLiveData<List<WLCategory>>
-        get() = categoryRepo!!.categories
+        get() = categoryRepo.categories
 
     fun refresh() {
-        data = repo?.search()
+        repo.search()
     }
-
-    val nextPage: Unit
-        get() {
-            data = repo?.searchWithOffset(if (data!!.value != null) data!!.value!!.size else 0)
-        }
 }

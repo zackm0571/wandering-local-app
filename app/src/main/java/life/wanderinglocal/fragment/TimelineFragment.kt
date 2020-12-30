@@ -94,9 +94,9 @@ class TimelineFragment : Fragment() {
         }
 
         with(viewModel) {
-            context?.let { initializeRepo(it) }
             setSearchingBy(WLPreferences.loadStringPref(context, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, life.wanderinglocal.Constants.DEFAULT_SEARCH_TERM))
-            timeline?.observe(viewLifecycleOwner, Observer { yelpData: List<WLTimelineEntry>? ->
+            categories.observe(viewLifecycleOwner, Observer { categories: List<WLCategory> -> initSearchUI(categories) })
+            timeline.observe(viewLifecycleOwner, Observer { yelpData: List<WLTimelineEntry>? ->
                 Timber.d("Timeline updated")
                 yelpData?.let {
                     timelineAdapter?.setData(yelpData)
@@ -104,17 +104,14 @@ class TimelineFragment : Fragment() {
                     binding.errorText.visibility = if (yelpData.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
                 }
             })
-            categories.observe(viewLifecycleOwner, Observer { categories: List<WLCategory> -> initSearchUI(categories) })
+            location.observe(viewLifecycleOwner, Observer {
+                refresh()
+            })
         }
         val bundle = Bundle()
         bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM,
-                viewModel.searchingBy?.value?.name)
+                viewModel.searchingBy.value?.name)
         // Try to use last lat / lng if possible.
-        val lat = WLPreferences.loadStringPref(context, Constants.PREF_LAT_KEY, null)
-        val lng = WLPreferences.loadStringPref(context, Constants.PREF_LNG_KEY, null)
-        if (lat != null && lng != null) {
-            viewModel.setLocation(lat, lng)
-        }
         initAdmob()
     }
 

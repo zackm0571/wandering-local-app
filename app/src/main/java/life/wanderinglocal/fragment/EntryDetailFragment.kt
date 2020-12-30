@@ -29,6 +29,7 @@ class EntryDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewModel.selected.observe(viewLifecycleOwner, Observer {
             binding.titleDetail.text = it?.businessName
+            binding.addressDetail.text = it?.locationString
             context?.let { it1 -> Glide.with(it1).load(it?.imageUrl).into(binding.logoDetail) }
         })
         binding.backButton.setOnClickListener {

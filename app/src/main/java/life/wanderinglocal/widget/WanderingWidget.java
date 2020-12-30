@@ -64,7 +64,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         // Init repo
         TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
         if (repo == null) {
-            repo = new TimelineRepo(context);
+            repo = new TimelineRepo();
         }
         String lat = WLPreferences.loadStringPref(context, Constants.PREF_LAT_KEY, ""),
                 lng = WLPreferences.loadStringPref(context, Constants.PREF_LNG_KEY, "");
@@ -153,7 +153,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
                 if (widgetId == appWidgetId) {
                     TimelineRepo repo = WidgetSearchRepo.widgetIdRepoMap.get(appWidgetId);
                     if (repo == null) {
-                        repo = new TimelineRepo(context);
+                        repo = new TimelineRepo();
                     }
                     WidgetSearchRepo.widgetIdRepoMap.put(appWidgetId, repo);
                     RemoteViews views = new RemoteViews(
