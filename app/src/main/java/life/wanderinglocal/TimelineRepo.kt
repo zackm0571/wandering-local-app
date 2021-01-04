@@ -36,25 +36,23 @@ class TimelineRepo() {
             if (location == null) location = ""
             field = location
         }
-    private var lat: String? = null
-    private var lng: String? = null
+    private var lat: Double = 0.0
+    private var lng: Double = 0.0
     private var listener: Listener? = null
     private val client = OkHttpClient()
     fun setListener(listener: Listener?) {
         this.listener = listener
     }
 
-    private fun getLat(): String {
-        if (lat == null) lat = ""
-        return lat!!
+    private fun getLat(): Double {
+        return lat
     }
 
-    private fun getLng(): String {
-        if (lng == null) lng = ""
-        return lng!!
+    private fun getLng(): Double {
+        return lng
     }
 
-    fun setLocation(lat: String, lng: String) {
+    fun setLocation(lat: Double, lng: Double) {
         this.lat = lat
         this.lng = lng
     }
@@ -90,7 +88,7 @@ class TimelineRepo() {
 
     private fun search(builder: SearchBuilder): MutableLiveData<List<WLTimelineEntry>?> {
         Timber.d("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", location, getLat(), getLng(), getSearchingBy().value.toString())
-        if ((getLat().isEmpty() || getLng().isEmpty()) && location!!.isEmpty()) return data
+        if (getLat() == 0.0 || getLng() == 0.0) return data
         yelpApi.search(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
                 val searchResponse = response.body()

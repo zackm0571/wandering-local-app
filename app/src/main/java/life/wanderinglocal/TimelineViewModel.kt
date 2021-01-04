@@ -14,13 +14,8 @@ class TimelineViewModel : ViewModel() {
     val searchingBy: MutableLiveData<WLCategory> = MutableLiveData()
 
     fun setLocation(lat: Double, lng: Double) {
-        location.value = Location(lat, lng)
-        repo.setLocation(lat.toString(), lng.toString())
-    }
-
-    fun setLocation(lat: String, lng: String) {
-        location.value = Location(lat.toDouble(), lng.toDouble())
         repo.setLocation(lat, lng)
+        location.value = Location(lat, lng)
     }
 
     /**

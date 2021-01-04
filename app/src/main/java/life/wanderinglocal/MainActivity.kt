@@ -3,34 +3,18 @@ package life.wanderinglocal
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
 import androidx.activity.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.*
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.ads.*
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import io.reactivex.rxjava3.functions.Consumer
 import life.wanderinglocal.databinding.ActivityMainBinding
-import life.wanderinglocal.databinding.SearchLayoutBinding
-import life.wanderinglocal.databinding.TimelineLayoutBinding
 import life.wanderinglocal.fragment.TimelineFragment
 import timber.log.Timber
 
@@ -43,15 +27,14 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: TimelineViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initFirebase()
-        initViewModel()
-        initLocationServices()
         initUI()
         setContentView(mainBinding?.root)
         supportFragmentManager.commit {
             replace<TimelineFragment>(R.id.fragment_container, Constants.TIMELINE_FRAGMENT_TAG)
         }
-        viewModel.refresh()
+        initFirebase()
+        initViewModel()
+        initLocationServices()
     }
 
     fun initViewModel() {

@@ -67,11 +67,9 @@ public class YelpApi {
             return this;
         }
 
-        public SearchBuilder setLatLng(String lat, String lng) {
-            if (lat != null && lng != null && lat.length() > 0 && lng.length() > 0) {
-                map.put(PARAM_LATITUDE, lat);
-                map.put(PARAM_LONGITUDE, lng);
-            }
+        public SearchBuilder setLatLng(Double lat, Double lng) {
+                map.put(PARAM_LATITUDE, lat.toString());
+                map.put(PARAM_LONGITUDE, lng.toString());
             return this;
         }
 

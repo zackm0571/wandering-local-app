@@ -69,7 +69,7 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
         String lat = WLPreferences.loadStringPref(context, Constants.PREF_LAT_KEY, ""),
                 lng = WLPreferences.loadStringPref(context, Constants.PREF_LNG_KEY, "");
         if (!lat.isEmpty() && !lng.isEmpty()) {
-            repo.setLocation(lat, lng);
+            repo.setLocation(Double.valueOf(lat), Double.valueOf(lng)); //todo: store as double
         } else {
             repo.setLocation(WLPreferences.loadStringPref(context, Constants.PREF_LOCATION_KEY, ""));
         }
