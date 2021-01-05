@@ -5,16 +5,9 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 import androidx.room.Room;
 
+import life.wanderinglocal.repo.FavoritesRepo;
+
 public class ServiceLocator {
-    private static WLDatabase db;
-    public static WLDatabase buildDb(Context context){
-        if(db == null){
-            db = Room.databaseBuilder(context.getApplicationContext(), WLDatabase.class, context.getPackageName()).build();
-        }
-        return db;
-    }
-    @Nullable
-    public static WLDatabase getDb(){
-        return db;
-    }
+    public static WLDatabase wlDb;
+    public static FavoritesRepo favoritesRepo;
 }

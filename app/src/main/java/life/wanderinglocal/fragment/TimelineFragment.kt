@@ -46,6 +46,12 @@ class TimelineFragment : Fragment() {
         context?.let {
             mFirebaseAnalytics = FirebaseAnalytics.getInstance(it)
         }
+
+        initUI()
+        initViewModel()
+        initAdmob()
+    }
+    fun initUI(){
         Timber.d("Initializing UI...")
         Timber.d("Initializing ProgressBar...")
         binding.progressBar.visibility = View.VISIBLE
@@ -92,7 +98,9 @@ class TimelineFragment : Fragment() {
             viewModel.refresh()
             getSearchDialog().dismiss()
         }
+    }
 
+    fun initViewModel() {
         with(viewModel) {
             setSearchingBy(WLPreferences.loadStringPref(context, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, life.wanderinglocal.Constants.DEFAULT_SEARCH_TERM))
             categories.observe(viewLifecycleOwner, Observer { categories: List<WLCategory> -> initSearchUI(categories) })
@@ -111,8 +119,7 @@ class TimelineFragment : Fragment() {
         val bundle = Bundle()
         bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM,
                 viewModel.searchingBy.value?.name)
-        // Try to use last lat / lng if possible.
-        initAdmob()
+
     }
 
     override fun onPause() {

@@ -19,8 +19,8 @@
         android:layout_above="@id/adView"
         android:layout_alignParentEnd="true"
         android:layout_margin="16dp"
-        android:backgroundTint="@color/colorAccent"
         android:contentDescription="@string/search"
+        android:backgroundTint="@color/colorAccent"
         android:src="@android:drawable/ic_menu_search"
         app:backgroundTint="@color/colorPrimary"
         app:rippleColor="@color/colorPrimary" />

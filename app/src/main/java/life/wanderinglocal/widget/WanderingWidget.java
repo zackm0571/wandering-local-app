@@ -142,9 +142,6 @@ public class WanderingWidget extends AppWidgetProvider implements TimelineRepo.L
                 && (action.equals(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
                 || action.equals(Constants.WL_ACTION_WIDGET_CLICK)
                 || action.equals(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE))) {
-            if (ServiceLocator.getDb() == null) {
-                ServiceLocator.buildDb(context);
-            }
 
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, WanderingWidget.class));

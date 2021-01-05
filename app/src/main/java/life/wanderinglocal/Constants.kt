@@ -10,6 +10,7 @@ object Constants {
     const val PREF_LAT_KEY = "location_lat_"
     const val PREF_LNG_KEY = "location_lng_"
     const val PREF_CATEGORY_KEY = "category_"
+    const val PREF_IS_FAVORITE_KEY = "is_favorite_"
     const val PREF_LAST_SEARCHED_CATEGORY_KEY = "last_category_"
     const val PREF_WIDGET_ID_KEY = "widgetId"
 

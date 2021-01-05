@@ -15,27 +15,30 @@ class WLTimelineEntry {
         @get:Query("SELECT * FROM timelineEntries LIMIT 20")
         val all: List<WLTimelineEntry?>?
 
-        @Query("SELECT * FROM timelineEntries WHERE searchTerm = :searchTerm AND rating > :rating LIMIT 10")
+        @Query("SELECT * FROM timelineEntries WHERE search_term = :searchTerm AND rating > :rating LIMIT 10")
         fun getDataWithParams(searchTerm: String?, rating: Double): List<WLTimelineEntry>?
 
         @Insert(onConflict = OnConflictStrategy.REPLACE)
         fun addEntries(data: List<WLTimelineEntry?>?)
 
-        @Update
-        fun updateEntries(data: List<WLTimelineEntry?>?)
+        @Insert(onConflict = OnConflictStrategy.REPLACE)
+        fun addEntry(data: WLTimelineEntry)
 
         @Query("DELETE FROM timelineEntries")
         fun deleteEntries()
+
+        @Query("SELECT * FROM timelineEntries WHERE is_favorite = 1")
+        fun getFavorites(): List<WLTimelineEntry>
     }
+
+    @PrimaryKey
+    var id: String = ""
 
     @ColumnInfo(name = "description")
     lateinit var description: String
 
-    @Ignore
-    var bmp: Bitmap? = null
-
-    @PrimaryKey
-    var businessName : String = ""
+    @ColumnInfo(name = "business_name")
+    var businessName: String = ""
 
     @ColumnInfo(name = "image_url")
     lateinit var imageUrl: String
@@ -44,18 +47,23 @@ class WLTimelineEntry {
     lateinit var yelpUrl: String
 
     @ColumnInfo(name = "rating")
-    var rating : Double = 0.0
+    var rating: Double = 0.0
 
-    @ColumnInfo(name = "searchTerm")
+    @ColumnInfo(name = "search_term")
     lateinit var searchTerm: String
 
-    @Ignore
-    var location: Location? = null
-
-    val locationString: String
-        get() = if (location == null) "" else String.format("%s\n%s, %s %s", location?.address1, location?.city, location?.state, location?.zipCode)
+    @ColumnInfo(name = "is_favorite")
+    var isFavorite: Boolean = false
 
     @ColumnInfo(name = "distance")
     var distance = 0.0
 
+    @Ignore
+    var location: Location? = null
+
+    @Ignore
+    var bmp: Bitmap? = null
+
+    val locationString: String
+        get() = if (location == null) "" else String.format("%s\n%s, %s %s", location?.address1, location?.city, location?.state, location?.zipCode)
 }

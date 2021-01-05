@@ -49,10 +49,10 @@ public class WanderingWidgetRemoteViewsFactory implements RemoteViewsService.Rem
         Timber.d("constructor");
         this.context = applicationContext;
         liveData = new MutableLiveData<>();
-        if (ServiceLocator.getDb() == null) {
-            ServiceLocator.buildDb(context);
-        }
-        db = ServiceLocator.getDb();
+//        if (ServiceLocator.getDb() == null) {
+//            ServiceLocator.buildDb(context);
+//        }
+        db = ServiceLocator.wlDb;
     }
 
     @Override

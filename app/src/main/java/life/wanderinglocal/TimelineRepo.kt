@@ -105,6 +105,7 @@ class TimelineRepo() {
                         data.description = b.text ?: ""
                         data.location = b.location
                         data.distance = b.distance
+                        data.id = b.url
                         results.add(data)
                     }
                     Timber.d("Yelp search has returned ${results.size} results")
@@ -128,15 +129,6 @@ class TimelineRepo() {
 
     fun searchWithOffset(offset: Int): MutableLiveData<List<WLTimelineEntry>?> {
         return search(SearchBuilder().setLimit(DEFAULT_RESULT_LIMIT).setOffset(offset).setLatLng(getLat(), getLng()).setLocation(location).setTerm(getSearchingBy().value!!.name))
-    }
-
-    private fun persist(entries: List<WLTimelineEntry?>) {
-        if (ServiceLocator.getDb() == null) Timber.d("DB is null, not persisting results")
-        AsyncTask.execute {
-            ServiceLocator.getDb()!!.dao().addEntries(entries)
-            if (listener != null) listener!!.onDataPersisted()
-            Timber.d("Persisting %d items to db", entries.size)
-        }
     }
 
     private fun loadCached() {
