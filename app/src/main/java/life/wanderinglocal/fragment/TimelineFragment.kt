@@ -13,6 +13,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import androidx.lifecycle.Observer
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.ads.*
@@ -51,7 +52,8 @@ class TimelineFragment : Fragment() {
         initViewModel()
         initAdmob()
     }
-    fun initUI(){
+
+    fun initUI() {
         Timber.d("Initializing UI...")
         Timber.d("Initializing ProgressBar...")
         binding.progressBar.visibility = View.VISIBLE
@@ -65,29 +67,20 @@ class TimelineFragment : Fragment() {
         Timber.d("Initializing RecyclerView...")
         timelineAdapter = context?.let { WLTimeLineAdapter(it) }
         timelineAdapter?.itemClickedSubject?.subscribe(Consumer {
-            parentFragmentManager.commit {
-                parentFragmentManager.findFragmentByTag(Constants.TIMELINE_FRAGMENT_TAG)?.let {
-                    hide(it)
-                }
-
-                add<EntryDetailFragment>(R.id.fragment_container, Constants.TIMELINE_DETAIL_FRAGMENT_TAG)
-                addToBackStack(Constants.TIMELINE_FRAGMENT_TAG)
-                viewModel.selected.value = it
-            }
+            val action =
+                    TimelineFragmentDirections.actionTimelineFragmentToEntryDetailFragment()
+            view?.findNavController()?.navigate(action)
+            viewModel.selected.value = it
         })
         binding.recyclerView.adapter = timelineAdapter
         binding.recyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                //todo replace with Google paging library
-            }
         })
         Timber.d("Initializing search view...")
         searchBinding = SearchLayoutBinding.bind(searchView)
         searchBinding?.searchButton?.setOnClickListener {
-            val checkedCategory = getCheckedCategory(searchBinding!!.categoryChipGroup)
-            if (checkedCategory == null || checkedCategory.length == 0) return@setOnClickListener
+            val checkedCategory = getCheckedCategory(searchBinding?.categoryChipGroup)
+            if (checkedCategory == null || checkedCategory.isEmpty()) return@setOnClickListener
             Timber.d("Searching for %s", checkedCategory)
             val bundle = Bundle()
             bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory)
@@ -119,7 +112,6 @@ class TimelineFragment : Fragment() {
         val bundle = Bundle()
         bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM,
                 viewModel.searchingBy.value?.name)
-
     }
 
     override fun onPause() {
@@ -127,6 +119,10 @@ class TimelineFragment : Fragment() {
         if (getSearchDialog().isShowing) {
             getSearchDialog().dismiss()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
     }
 
     private fun initAdmob() {
@@ -198,9 +194,7 @@ class TimelineFragment : Fragment() {
             val c = Chip(context)
             c.text = category.name
             c.isCheckable = true
-            if (category.name == lastSearch) {
-                c.isChecked = true
-            }
+            c.isChecked = category.name == lastSearch
             cg.addView(c)
         }
     }

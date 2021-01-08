@@ -27,6 +27,9 @@ class WLTimelineEntry {
         @Query("DELETE FROM timelineEntries")
         fun deleteEntries()
 
+        @Query("SELECT * FROM timelineEntries WHERE id IN (:listOfIds)")
+        fun getEntriesFromListOfIds(listOfIds : List<String>) : List<WLTimelineEntry>
+
         @Query("SELECT * FROM timelineEntries WHERE is_favorite = 1")
         fun getFavorites(): List<WLTimelineEntry>
     }

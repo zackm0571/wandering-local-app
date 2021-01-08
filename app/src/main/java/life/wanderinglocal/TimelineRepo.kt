@@ -76,8 +76,8 @@ class TimelineRepo() {
         searchingBy.value = category
     }
 
-    fun setSearchBy(s: String?) {
-        searchingBy.value = WLCategory(s!!)
+    fun setSearchBy(s: String) {
+        searchingBy.value = WLCategory(s)
     }
 
     //todo: replace with observer
@@ -109,7 +109,7 @@ class TimelineRepo() {
                         results.add(data)
                     }
                     Timber.d("Yelp search has returned ${results.size} results")
-                    results.sortBy {
+                    results.sortByDescending {
                         it?.rating
                     }
                     data.postValue(results as List<WLTimelineEntry>)

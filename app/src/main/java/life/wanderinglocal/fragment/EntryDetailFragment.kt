@@ -2,6 +2,7 @@ package life.wanderinglocal.fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
@@ -21,11 +22,31 @@ import timber.log.Timber
 class EntryDetailFragment : Fragment() {
     private val viewModel: TimelineViewModel by activityViewModels()
     private lateinit var binding: TimelineDetailLayoutBinding
-    private lateinit var mFirebaseAnalytics : FirebaseAnalytics
+    private lateinit var mFirebaseAnalytics: FirebaseAnalytics
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = TimelineDetailLayoutBinding.inflate(inflater)
+        activity?.actionBar?.setDisplayHomeAsUpEnabled(true)
+        setHasOptionsMenu(true)
         return binding.root
+    }
+
+    override fun onDestroyView() {
+        val activity = activity as? MainActivity
+        activity?.actionBar?.setDisplayHomeAsUpEnabled(false)
+        setHasOptionsMenu(false)
+        super.onDestroyView()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val activity = activity as? MainActivity
+        return when (item.itemId) {
+            android.R.id.home -> {
+                activity?.onBackPressed()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,7 +55,7 @@ class EntryDetailFragment : Fragment() {
             mFirebaseAnalytics = FirebaseAnalytics.getInstance(it)
         }
         viewModel.selected.observe(viewLifecycleOwner, Observer {
-            it?.let{
+            it?.let {
                 binding.titleDetail.text = it.businessName
                 binding.addressDetail.text = it.locationString
                 it.isFavorite = ServiceLocator.favoritesRepo.favorites.contains(it.id)
@@ -42,15 +63,10 @@ class EntryDetailFragment : Fragment() {
                 context?.let { it1 -> Glide.with(it1).load(it.imageUrl).into(binding.logoDetail) }
             }
         })
-        binding.backButton.setOnClickListener {
-            parentFragmentManager.commit {
-                replace<TimelineFragment>(R.id.fragment_container, Constants.TIMELINE_FRAGMENT_TAG)
-            }
-        }
         binding.favoriteFab.setOnClickListener {
             viewModel.selected.value?.let {
                 it.isFavorite = it.isFavorite.not()
-                when(it.isFavorite){
+                when (it.isFavorite) {
                     true -> ServiceLocator.favoritesRepo.favorites.add(it.id)
                     false -> ServiceLocator.favoritesRepo.favorites.remove(it.id)
                 }
@@ -67,6 +83,7 @@ class EntryDetailFragment : Fragment() {
             false -> binding.favoriteFab.setImageResource(R.drawable.favorite_border)
         }
     }
+
     private fun initAdmob() {
         Timber.d("Initializing Admob...")
         MobileAds.initialize(context)

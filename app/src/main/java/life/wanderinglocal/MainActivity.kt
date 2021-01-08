@@ -18,7 +18,7 @@ import life.wanderinglocal.databinding.ActivityMainBinding
 import life.wanderinglocal.fragment.TimelineFragment
 import timber.log.Timber
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : FragmentActivity() {
     // Firebase
     private var mFirebaseAnalytics: FirebaseAnalytics? = null
 
@@ -29,9 +29,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         initUI()
         setContentView(mainBinding?.root)
-        supportFragmentManager.commit {
-            replace<TimelineFragment>(R.id.fragment_container, Constants.TIMELINE_FRAGMENT_TAG)
-        }
         initFirebase()
         initViewModel()
         initLocationServices()
@@ -40,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     fun initViewModel() {
         viewModel.searchingBy.value = WLCategory(WLPreferences.loadStringPref(this@MainActivity, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, Constants.DEFAULT_SEARCH_TERM))
         viewModel.searchingBy.observe(this@MainActivity, Observer { s: WLCategory ->
-            supportActionBar?.title = getString(R.string.app_name) + " - " + s.name
+            actionBar?.title = getString(R.string.app_name) + " - " + s.name
         })
     }
 
@@ -100,5 +97,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initUI() {
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
+        setActionBar(mainBinding?.toolbar)
+        actionBar?.setDisplayShowHomeEnabled(true)
     }
 }
