@@ -87,7 +87,7 @@ class TimelineRepo() {
     }
 
     private fun search(builder: SearchBuilder): MutableLiveData<List<WLTimelineEntry>?> {
-        Timber.d("Search: location=%s, lat=%s, lng=%s, searchTerm=%s", location, getLat(), getLng(), getSearchingBy().value.toString())
+        Timber.i("Fetching timeline: location=%s, lat=%s, lng=%s, searchTerm=%s", location, getLat(), getLng(), getSearchingBy().value.toString())
         if (getLat() == 0.0 || getLng() == 0.0) return data
         yelpApi.search(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
@@ -113,6 +113,7 @@ class TimelineRepo() {
                         it?.rating
                     }
                     data.postValue(results as List<WLTimelineEntry>)
+                    Timber.d("Data: $data")
                 }
             }
 

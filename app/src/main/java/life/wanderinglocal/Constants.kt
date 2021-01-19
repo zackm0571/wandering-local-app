@@ -34,4 +34,5 @@ object Constants {
     @JvmField
     val PERMISSIONS = arrayOf(Manifest.permission_group.LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
     const val PERMISSION_REQUEST_CODE = 71
+    const val CHECK_LOCATION_SETTINGS = 771
 }

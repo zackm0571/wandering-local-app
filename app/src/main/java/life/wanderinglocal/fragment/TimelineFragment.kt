@@ -29,7 +29,7 @@ import timber.log.Timber
 
 class TimelineFragment : Fragment() {
     private lateinit var binding: TimelineLayoutBinding
-    private var searchBinding: SearchLayoutBinding? = null
+    private lateinit var searchBinding: SearchLayoutBinding
     private lateinit var searchView: View
     private var searchDialog: AlertDialog? = null
     private val viewModel: TimelineViewModel by activityViewModels()
@@ -76,21 +76,6 @@ class TimelineFragment : Fragment() {
         binding.recyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
         })
-        Timber.d("Initializing search view...")
-        searchBinding = SearchLayoutBinding.bind(searchView)
-        searchBinding?.searchButton?.setOnClickListener {
-            val checkedCategory = getCheckedCategory(searchBinding?.categoryChipGroup)
-            if (checkedCategory == null || checkedCategory.isEmpty()) return@setOnClickListener
-            Timber.d("Searching for %s", checkedCategory)
-            val bundle = Bundle()
-            bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory)
-            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_SEARCH_RESULTS, bundle)
-            binding.progressBar.visibility = View.VISIBLE
-            WLPreferences.saveStringPref(context, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory)
-            viewModel.setSearchingBy(checkedCategory)
-            viewModel.refresh()
-            getSearchDialog().dismiss()
-        }
     }
 
     fun initViewModel() {
@@ -119,10 +104,6 @@ class TimelineFragment : Fragment() {
         if (getSearchDialog().isShowing) {
             getSearchDialog().dismiss()
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
     }
 
     private fun initAdmob() {
@@ -165,7 +146,24 @@ class TimelineFragment : Fragment() {
      * @param categories
      */
     private fun initSearchUI(categories: List<WLCategory>) {
-        val cg: ChipGroup = searchView.findViewById(R.id.categoryChipGroup)
+        Timber.d("Initializing search view...")
+        searchBinding = SearchLayoutBinding.bind(searchView)
+        searchBinding.searchButton.setOnClickListener {
+            val checkedCategory = getCheckedCategory(searchBinding.categoryChipGroup)
+            if (checkedCategory == null || checkedCategory.isEmpty()) return@setOnClickListener
+            Timber.d("Searching for %s", checkedCategory)
+            val bundle = Bundle()
+            bundle.putString(FirebaseAnalytics.Param.SEARCH_TERM, checkedCategory)
+            mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_SEARCH_RESULTS, bundle)
+            binding.progressBar.visibility = View.VISIBLE
+            WLPreferences.saveStringPref(context, Constants.PREF_LAST_SEARCHED_CATEGORY_KEY, checkedCategory)
+            viewModel.setSearchingBy(checkedCategory)
+            viewModel.refresh()
+            binding.recyclerView.scrollToPosition(0)
+            getSearchDialog().dismiss()
+        }
+
+        val cg: ChipGroup = searchBinding.categoryChipGroup
         cg.setOnCheckedChangeListener(object : ChipGroup.OnCheckedChangeListener {
             override fun onCheckedChanged(group: ChipGroup, checkedId: Int) {
                 group.setOnCheckedChangeListener(null)
@@ -194,7 +192,9 @@ class TimelineFragment : Fragment() {
             val c = Chip(context)
             c.text = category.name
             c.isCheckable = true
-            c.isChecked = category.name == lastSearch
+            if (category.name == lastSearch) {
+                c.isChecked = true
+            }
             cg.addView(c)
         }
     }

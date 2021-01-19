@@ -2,25 +2,33 @@ package life.wanderinglocal
 
 import android.Manifest
 import android.content.Context
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import androidx.activity.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.*
 import androidx.lifecycle.Observer
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.Task
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import life.wanderinglocal.databinding.ActivityMainBinding
-import life.wanderinglocal.fragment.TimelineFragment
 import timber.log.Timber
 
 class MainActivity : FragmentActivity() {
     // Firebase
     private var mFirebaseAnalytics: FirebaseAnalytics? = null
+
+    // Location
+    private lateinit var fusedLocationProvider: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
 
     // View binding
     private var mainBinding: ActivityMainBinding? = null
@@ -46,6 +54,7 @@ class MainActivity : FragmentActivity() {
         if (requestCode == Constants.PERMISSION_REQUEST_CODE) {
             for (i in permissions.indices) {
                 if (permissions[i] == Manifest.permission.ACCESS_FINE_LOCATION && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    Timber.d("Location permissions accepted")
                     initLocationServices()
                 }
             }
@@ -71,9 +80,57 @@ class MainActivity : FragmentActivity() {
                 return
             }
         }
+        fusedLocationProvider = FusedLocationProviderClient(this@MainActivity)
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         getLastKnownLocation(locationManager)?.let {
             viewModel.setLocation(it.latitude, it.longitude)
+        }
+        val locationRequest = LocationRequest.create()?.apply {
+            interval = 100000
+            fastestInterval = 100000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        val builder = locationRequest?.let {
+            LocationSettingsRequest.Builder()
+                    .addLocationRequest(it)
+        }
+
+        val client: SettingsClient = LocationServices.getSettingsClient(this)
+        val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder?.build())
+        task.addOnSuccessListener {
+            locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    locationResult ?: return
+                    var bestLocation: Location? = null
+                    for (location in locationResult.locations) {
+                        if (bestLocation == null || location.accuracy < bestLocation.accuracy) {
+                            // Found best last known location: %s", l);
+                            bestLocation = location
+                        }
+                    }
+                    bestLocation?.let {
+                        viewModel.setLocation(it.latitude, it.longitude)
+                    }
+                }
+            }
+            fusedLocationProvider.requestLocationUpdates(locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper())
+        }
+
+        task.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed
+                // by showing the user a dialog.
+                try {
+                    // Show the dialog by calling startResolutionForResult(),
+                    // and check the result in onActivityResult().
+                    exception.startResolutionForResult(this@MainActivity,
+                            Constants.CHECK_LOCATION_SETTINGS)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // Ignore the error.
+                }
+            }
         }
     }
 
