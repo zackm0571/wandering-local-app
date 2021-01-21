@@ -18,9 +18,11 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
 import life.wanderinglocal.WLTimeLineAdapter.YelpBusiness
+import life.wanderinglocal.repo.FavoritesRepo
 import java.util.*
 
 class WLTimeLineAdapter(private val context: Context) : RecyclerView.Adapter<YelpBusiness>() {
+    val favoritesRepo : FavoritesRepo = ServiceLocator.favoritesRepo
     val itemClickedSubject: Subject<WLTimelineEntry> = PublishSubject.create()
     var displayHeight = -1
         get() {
@@ -72,6 +74,8 @@ class WLTimeLineAdapter(private val context: Context) : RecyclerView.Adapter<Yel
                 .into(holder.imgView)
         holder.ratingBar.numStars = 5
         holder.ratingBar.rating = timelineEntry.rating.toFloat()
+        val isFavorite = favoritesRepo.favorites.contains(timelineEntry.id)
+        holder.isFavoriteImgView.visibility = if(isFavorite) View.VISIBLE else View.GONE
         holder.itemView.setOnClickListener { view: View? ->
             itemClickedSubject.onNext(timelineEntry)
         }
@@ -84,6 +88,7 @@ class WLTimeLineAdapter(private val context: Context) : RecyclerView.Adapter<Yel
     class YelpBusiness(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var ratingBar: RatingBar
         var imgView: ImageView
+        var isFavoriteImgView : ImageView
         var businessNameTextView: TextView
         var businessAddressTextView: TextView
 
@@ -92,6 +97,7 @@ class WLTimeLineAdapter(private val context: Context) : RecyclerView.Adapter<Yel
             businessNameTextView = itemView.findViewById(R.id.businessName)
             ratingBar = itemView.findViewById(R.id.businessRatingBar)
             businessAddressTextView = itemView.findViewById(R.id.businessAddress)
+            isFavoriteImgView = itemView.findViewById(R.id.is_favorite_img)
         }
     }
 
