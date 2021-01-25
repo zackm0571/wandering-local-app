@@ -1,5 +1,7 @@
 package life.wanderinglocal.fragment
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -58,6 +60,11 @@ class EntryDetailFragment : Fragment() {
             it?.let {
                 binding.titleDetail.text = it.businessName
                 binding.addressDetail.text = it.locationString
+                binding.addressDetail.setOnClickListener {
+                    val locationUri = Uri.parse(String.format("http://maps.google.com/maps?q=" + viewModel.selected.value?.locationString))
+                    val intent = Intent(Intent.ACTION_VIEW, locationUri)
+                    context?.startActivity(intent)
+                }
                 it.isFavorite = ServiceLocator.favoritesRepo.favorites.contains(it.id)
                 setFavoriteFabImageState()
                 context?.let { it1 -> Glide.with(it1).load(it.imageUrl).into(binding.logoDetail) }
